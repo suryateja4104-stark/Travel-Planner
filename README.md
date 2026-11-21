@@ -2,13 +2,15 @@
 
 Interactive, browser-native road trip exploration and getaway planning tools with 3D map visualization, dynamic road routing, elevation profiles, and AI-powered day itineraries.
 
+🌐 **Live GitHub Pages URL**: [https://suryateja4104-stark.github.io/Travel-Planner/](https://suryateja4104-stark.github.io/Travel-Planner/)
+
 Both applications run **100% standalone in your browser** with zero installation, zero server dependencies, and zero paid API keys required.
 
 ---
 
-## 🚀 Included Applications
+## 🚀 Live Applications
 
-### 1. 🏞️ Weekend & Day Trip Explorer (`weekend_planner.html`)
+### 1. 🏞️ [Weekend & Day Trip Explorer (Live)](https://suryateja4104-stark.github.io/Travel-Planner/)
 Discover road trips, scenic viewpoints, waterfalls, ancient forts, temples, lakes, and wildlife sanctuaries within driving distance of any city.
 
 * **Smart Radius & Time Filters**: Filter by **driving duration** (1 to 8 hours) or **distance** (50 to 500 km) with instant chips and fine-tuning sliders.
@@ -29,7 +31,7 @@ Discover road trips, scenic viewpoints, waterfalls, ancient forts, temples, lake
 
 ---
 
-### 2. 🗺️ 3D Road Trip Visualizer (`Mahbubnagar to Indore trip map (worker test).html`)
+### 2. 🗺️ [3D Road Trip Visualizer (Live)](https://suryateja4104-stark.github.io/Travel-Planner/trip_map.html)
 A cinematic 3D globe visualization of the 866 km road journey from Mahbubnagar to Indore.
 
 * **MapLibre 3D Globe**: Smooth 3D terrain and vector road geometry.
@@ -43,19 +45,19 @@ A cinematic 3D globe visualization of the 866 km road journey from Mahbubnagar t
 
 ---
 
-## 💻 How to Run
+## 💻 How to Run Locally
 
 No build step, Node.js, or server setup is required.
 
 Simply open either file directly in any modern browser:
-* Double-click `weekend_planner.html`
-* Double-click `Mahbubnagar to Indore trip map (worker test).html`
+* Double-click `index.html` (or `weekend_planner.html`)
+* Double-click `trip_map.html`
 
 Or serve locally with any static HTTP server:
 ```bash
 python -m http.server 8000
 ```
-Then visit `http://localhost:8000/weekend_planner.html` in your browser.
+Then visit `http://localhost:8000/` in your browser.
 
 ---
 

@@ -605,6 +605,7 @@ $('#bar').innerHTML = `
   <div class="top">
     <div class="brand"><div class="cap">${esc(T.meta.eyebrow)}</div><b>${esc(T.meta.title)}</b></div>
     <div class="tools">
+<a href="index.html" class="btn sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:5px; color:#fff;" title="Weekend & Getaway Finder">🧭 Getaway Finder</a>
       <div class="sws">${Object.keys(ACC).map(k => `<button class="sw${k === accent ? ' on' : ''}" data-a="${k}" title="${k} accent" style="background:${ACC[k]}"></button>`).join('')}</div>
       <button class="btn sm only-m" id="b-search">Search</button>
       <button class="btn sm only-m" id="b-list">Stops</button>
