@@ -645,9 +645,9 @@ input[type=range] {
       <span>🗺️</span>
       <span class="hide-xs">3D Trip Map</span>
     </a>
-    <button class="btn-pill" id="btn-open-settings" title="AI Settings & API Keys">
+    <button class="btn-pill" id="btn-open-settings" title="Optional AI Itinerary Settings">
       <span>⚙️</span>
-      <span class="hide-xs">AI Settings</span>
+      <span class="hide-xs">AI Itinerary (Optional)</span>
     </button>
   </div>
 </header>
@@ -784,6 +784,24 @@ input[type=range] {
     </div>
 
     <div class="modal-body">
+      <div class="plan-section" style="border-left: 3px solid var(--emerald); background: rgba(16, 185, 129, 0.08);">
+        <div class="plan-section-title" style="color: var(--emerald);">
+          <span>✅</span> Map & Routing are 100% Free (No API Keys Needed)
+        </div>
+        <div class="plan-section-p" style="font-size: 12px;">
+          The interactive map, place search, road driving times, elevation, and Wikipedia photos require <strong>ZERO API keys</strong>. The fields below are completely optional and only used if you wish to connect Claude 3.5 or Google Gemini for custom AI itinerary writing.
+        </div>
+      </div>
+
+      <div class="plan-section" style="border-left: 3px solid var(--accent); background: rgba(56, 189, 248, 0.08);">
+        <div class="plan-section-title" style="color: var(--accent);">
+          <span>🔒</span> Key Safety & Zero-Leak Security
+        </div>
+        <div class="plan-section-p" style="font-size: 12px;">
+          Keys you enter are stored <strong>strictly inside your own browser (localStorage)</strong> on this device. They are never uploaded to any server, database, or GitHub. Calls to Claude/Gemini are made directly from your browser via secure encrypted HTTPS. You can clear them anytime with the button below.
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">Anthropic Claude API Key (Optional)</label>
         <input type="password" id="input-claude-key" class="form-input" placeholder="sk-ant-api03-...">
