@@ -1,0 +1,15 @@
+# Node & Temp directories
+node_modules/
+.chrome_*
+*.log
+*.tmp
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local screenshots / artifacts
+app_verified.png
+search_dropdown.png
+search_routed.png
+weekend_planner_verified.png
