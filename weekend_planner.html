@@ -2,1646 +2,1425 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Weekend & Day Trip Explorer — Road Trip & Getaway Planner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Weekend & Day Trip Explorer · 3D Road Trips</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <style>
 :root {
-  --bg: #090d16;
-  --surface: #101726;
-  --surface-card: #151f33;
-  --surface-hover: #1c2944;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(56, 189, 248, 0.5);
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --accent: #38bdf8;
-  --accent-glow: rgba(56, 189, 248, 0.25);
-  --emerald: #10b981;
-  --amber: #f59e0b;
-  --rose: #f43f5e;
-  --violet: #8b5cf6;
-  --cyan: #06b6d4;
-  --sidebar-w: 430px;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --bg: #0c0f14;
+  --soft: rgba(14, 18, 25, 0.94);
+  --panel: rgba(14, 18, 25, 0.94);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #e8ecf2;
+  --mute: #8a94a6;
+  --dim: #505a69;
+  --accent: #ffb000;
+  --accent-glow: rgba(255, 176, 0, 0.25);
+  --f-display: 'Barlow Condensed', sans-serif;
+  --f-body: 'Barlow', sans-serif;
+  --f-sans: 'Barlow Semi Condensed', sans-serif;
+  --bar: 56px;
+  --rail: 400px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--f-body); }
 
-body {
-  font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-}
+#map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 
-/* Header */
-#header {
-  height: 56px;
-  background: rgba(16, 23, 38, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+/* Top Header Bar */
+#bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--bar);
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  z-index: 1000;
-  flex-shrink: 0;
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--panel-border);
 }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 17px;
-  font-weight: 700;
-  color: #fff;
-}
-.brand-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #0284c7, #38bdf8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 2px 8px var(--accent-glow);
-}
-.brand-tag {
-  font-size: 10px;
-  text-transform: uppercase;
-  background: rgba(56, 189, 248, 0.15);
-  color: var(--accent);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-left: 4px;
-}
-.header-actions { display: flex; align-items: center; gap: 8px; }
+.brand { display: flex; flex-direction: column; line-height: 1.1; }
+.brand .cap { font-family: var(--f-sans); font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--mute); }
+.brand b { font-family: var(--f-display); font-size: 18px; font-weight: 700; letter-spacing: 0.8px; color: #fff; text-transform: uppercase; }
 
-.btn-pill {
-  padding: 6px 12px;
-  border-radius: 20px;
+.tools { display: flex; align-items: center; gap: 8px; }
+.btn {
+  font-family: var(--f-sans);
   font-size: 13px;
   font-weight: 600;
-  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
+  color: #fff;
   cursor: pointer;
-  display: flex;
+  text-decoration: none;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
-.btn-pill:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--accent); }
+.btn:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); color: #fff; }
+.btn.accent { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+.btn.accent:hover { filter: brightness(1.15); box-shadow: 0 0 12px var(--accent-glow); }
+.btn.sm { font-size: 12px; padding: 5px 10px; }
 
-/* Layout */
-#app-container {
-  display: flex;
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Sidebar */
-#sidebar {
-  width: var(--sidebar-w);
-  height: 100%;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  z-index: 500;
-  flex-shrink: 0;
-  position: relative;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.sidebar-scroll {
-  flex: 1;
+/* Side Rail */
+#rail {
+  position: fixed;
+  left: 0;
+  top: var(--bar);
+  bottom: 0;
+  width: var(--rail);
+  z-index: 8;
+  background: var(--panel);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--panel-border);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.sidebar-scroll::-webkit-scrollbar { width: 5px; }
-.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+#rail.collapsed { transform: translateX(-100%); }
 
-.section-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  color: var(--text-dim);
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Search card */
-.search-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
-  position: relative;
-}
-.search-input-wrap { position: relative; display: flex; align-items: center; }
-.search-icon { position: absolute; left: 12px; font-size: 14px; color: var(--text-dim); pointer-events: none; }
-.search-input {
-  width: 100%;
-  padding: 10px 36px 10px 36px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+.rail-toggle {
+  position: fixed;
+  left: var(--rail);
+  top: calc(var(--bar) + 12px);
+  z-index: 9;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-left: none;
   color: #fff;
-  font-family: inherit;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
-.search-clear {
-  position: absolute; right: 10px; background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; display: none;
-}
-.search-clear:hover { color: #fff; }
-
-.btn-loc {
-  margin-top: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  background: rgba(56, 189, 248, 0.08);
-  border: 1px dashed rgba(56, 189, 248, 0.3);
-  border-radius: var(--radius-sm);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
+  width: 28px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  border-radius: 0 6px 6px 0;
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.btn-loc:hover { background: rgba(56, 189, 248, 0.16); border-color: var(--accent); }
+#rail.collapsed + .rail-toggle { left: 0; }
 
-/* Autocomplete */
-.autocomplete-list {
+.rail-head { padding: 18px 18px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.rail-head .cap { font-family: var(--f-sans); font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mute); }
+.rail-head h1 { font-family: var(--f-display); font-size: 26px; font-weight: 700; color: #fff; text-transform: uppercase; margin-top: 4px; }
+
+/* Search & Inputs Panel */
+.route-search { padding: 16px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); display: flex; flex-direction: column; gap: 14px; }
+.sec-title { font-family: var(--f-sans); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--mute); }
+
+.search-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.search-row:focus-within { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+.sdot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; flex-shrink: 0; }
+.search-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-family: var(--f-body);
+  font-size: 14px;
+  padding: 8px 0;
+  outline: none;
+}
+.search-input::placeholder { color: var(--dim); }
+.icon-btn { background: transparent; border: none; color: var(--mute); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
+.icon-btn:hover { color: #fff; }
+
+.search-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   left: 0;
   right: 0;
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
-  z-index: 1000;
-  max-height: 220px;
+  background: #141922;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  margin-top: 4px;
+  max-height: 200px;
   overflow-y: auto;
-  display: none;
+  z-index: 20;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
-.autocomplete-item {
-  padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.04); display: flex; flex-direction: column;
+.search-dropdown.hide { display: none; }
+.dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+  color: #fff;
 }
-.autocomplete-item:last-child { border-bottom: none; }
-.autocomplete-item:hover { background: var(--surface-hover); }
-.autocomplete-main { font-weight: 600; color: #fff; }
-.autocomplete-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.dropdown-item:hover { background: rgba(255, 176, 0, 0.15); color: var(--accent); }
+.dropdown-item small { display: block; color: var(--mute); font-size: 11px; margin-top: 2px; }
 
-/* Filter Tabs */
-.filter-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* Filter Tabs & Chips */
+.tab-row { display: flex; gap: 4px; background: rgba(255, 255, 255, 0.04); padding: 3px; border-radius: 6px; }
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--mute);
+  font-family: var(--f-sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
 }
-.segmented-control {
-  display: flex;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 3px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-}
-.seg-btn {
-  flex: 1; padding: 6px 10px; font-size: 12px; font-weight: 600; text-align: center; border-radius: 6px; border: none; background: none; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-}
-.seg-btn.active { background: var(--surface-hover); color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+.tab-btn.active { background: rgba(255, 255, 255, 0.1); color: #fff; }
 
 .chips-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip {
-  padding: 5px 10px; font-size: 12px; font-weight: 600; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); border-radius: 16px; color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  font-family: var(--f-sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--mute);
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.chip:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-.chip.active { background: rgba(56, 189, 248, 0.18); border-color: var(--accent); color: var(--accent); }
+.chip:hover { border-color: rgba(255, 255, 255, 0.25); color: #fff; }
+.chip.active { background: rgba(255, 176, 0, 0.15); border-color: var(--accent); color: var(--accent); }
 
-.range-slider-wrap { display: flex; flex-direction: column; gap: 6px; }
-.range-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
-.range-val { font-weight: 700; color: var(--accent); }
+/* Range Slider */
+.slider-wrap { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.slider-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--mute); font-family: var(--f-sans); }
+.slider-info b { color: var(--accent); font-size: 14px; }
 input[type=range] {
-  width: 100%; accent-color: var(--accent); background: rgba(255, 255, 255, 0.1); height: 6px; border-radius: 3px; cursor: pointer;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--accent-glow);
 }
 
 /* Category Grid */
-.categories-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
-}
-.cat-actions { display: flex; gap: 8px; }
-.cat-action-btn { background: none; border: none; font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 600; }
-.cat-action-btn:hover { text-decoration: underline; }
-
-.cat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-top: 8px;
-}
+.cats-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
 .cat-pill {
-  padding: 8px 10px;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--mute);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   transition: all 0.2s;
-  user-select: none;
 }
-.cat-pill:hover { background: rgba(255, 255, 255, 0.07); }
-.cat-pill.active { background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.4); }
-.cat-icon { font-size: 16px; }
-.cat-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+.cat-pill:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.cat-pill.active { background: rgba(255, 176, 0, 0.15); border-color: var(--accent); color: #fff; }
 
-/* Primary Button */
-.btn-primary {
+.find-btn {
   width: 100%;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #0284c7, #38bdf8);
-  border: none;
-  border-radius: var(--radius);
-  color: #fff;
-  font-family: inherit;
-  font-size: 14px;
+  padding: 12px;
+  font-family: var(--f-display);
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #000;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   box-shadow: 0 4px 15px var(--accent-glow);
   transition: all 0.2s;
-}
-.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-/* Results */
-.results-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0 4px 0;
-}
-.results-count { font-size: 13px; font-weight: 700; color: #fff; }
-.results-sort {
-  font-size: 11px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border);
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: var(--text-muted);
-  outline: none;
-}
-
-/* Place Cards */
-.places-list { display: flex; flex-direction: column; gap: 12px; }
-
-.place-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  position: relative;
-}
-.place-card:hover { border-color: rgba(56, 189, 248, 0.4); transform: translateY(-2px); box-shadow: var(--shadow); }
-.place-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
-
-.place-img-wrap {
-  width: 100%;
-  height: 140px;
-  position: relative;
-  background: #0b1120;
-  overflow: hidden;
-}
-.place-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-.place-card:hover .place-img { transform: scale(1.04); }
-.place-img-fallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  color: var(--text-dim);
-  gap: 6px;
-}
-.place-img-fallback span { font-size: 32px; }
-
-.badge-cat {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.badge-time {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  font-family: 'JetBrains Mono', monospace;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.place-body {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
-.place-title { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.25; }
-.place-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+.find-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.find-btn:active { transform: translateY(0); }
 
-.place-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-.btn-card-action {
-  flex: 1;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-decoration: none;
+/* HUD Stats Bar */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-.btn-card-action:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
-.btn-card-ai {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(56, 189, 248, 0.2));
-  border-color: rgba(139, 92, 246, 0.4);
-  color: #c084fc;
-}
-.btn-card-ai:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(56, 189, 248, 0.35));
-  border-color: #a855f7;
-  color: #fff;
-}
-
-/* Map */
-#map-container { flex: 1; height: 100%; position: relative; background: #080c14; }
-#map { width: 100%; height: 100%; }
-
-/* Markers */
-.origin-pin {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #0284c7;
-  border: 3px solid #fff;
-  box-shadow: 0 0 15px rgba(2, 132, 199, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 12px;
-  position: relative;
-}
-.origin-pin::after {
-  content: '';
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2px solid #38bdf8;
-  animation: pulse-ring 2s infinite;
-}
-@keyframes pulse-ring { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(1.6); opacity: 0; } }
-
-.place-pin {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--surface-card);
-  border: 2px solid #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.place-pin:hover { transform: scale(1.25) translateY(-4px); z-index: 1000 !important; }
-
-/* Popup */
-.leaflet-popup-content-wrapper {
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: var(--shadow) !important;
-  padding: 4px !important;
-}
-.leaflet-popup-tip { background: var(--surface) !important; }
-.popup-card { width: 220px; display: flex; flex-direction: column; gap: 6px; }
-.popup-img { width: 100%; height: 100px; object-fit: cover; border-radius: var(--radius-sm); }
-.popup-title { font-size: 14px; font-weight: 700; color: #fff; }
-.popup-meta { font-size: 11px; color: var(--accent); font-weight: 600; }
-.popup-btn {
-  padding: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--accent); border-radius: 6px; color: #fff; font-size: 11px; font-weight: 700; text-align: center; cursor: pointer; margin-top: 4px; text-decoration: none;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px;
-}
-.modal-overlay.open { display: flex; }
-.modal-content {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  width: 100%;
-  max-width: 580px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  animation: modal-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes modal-enter { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
-.modal-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-size: 17px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
-.modal-close { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; }
-.modal-close:hover { color: #fff; }
-.modal-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-.modal-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-
-/* AI Plan Sections */
-.plan-banner {
-  height: 120px;
-  border-radius: var(--radius-sm);
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  padding: 12px;
-  overflow: hidden;
-}
-.plan-banner::before {
-  content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(16, 23, 38, 0.95), transparent 70%);
-}
-.plan-banner-text { position: relative; z-index: 2; }
-.plan-banner-title { font-size: 20px; font-weight: 700; color: #fff; }
-.plan-banner-sub { font-size: 12px; color: var(--accent); font-weight: 600; }
-
-.plan-section {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-}
-.plan-section-title {
-  font-size: 12px;
-  text-transform: uppercase;
+.stat { display: flex; flex-direction: column; align-items: flex-start; }
+.stat b {
+  font-family: var(--f-display);
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-.plan-section-p { font-size: 13px; line-height: 1.5; color: #e2e8f0; }
-.checklist-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e2e8f0; margin-bottom: 4px; }
-.checklist-item::before { content: '✓'; color: var(--emerald); font-weight: 700; }
-
-/* Settings Form */
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-.form-input {
-  padding: 10px 12px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none;
-}
-.form-input:focus { border-color: var(--accent); }
-.form-hint { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
-
-/* Toast */
-#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
-.toast {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
   color: #fff;
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+.stat b small { font-size: 11px; color: var(--accent); margin-left: 2px; }
+.stat span { font-family: var(--f-sans); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--mute); margin-top: 3px; }
+
+/* Status message */
+#status-msg {
+  padding: 12px 18px;
   font-size: 13px;
-  box-shadow: var(--shadow);
+  color: var(--mute);
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: toast-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
 .spinner {
-  width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Mobile */
-#mobile-tabs { display: none; height: 52px; background: var(--surface); border-top: 1px solid var(--border); z-index: 1000; }
-.mob-tab-btn {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--text-dim); background: none; border: none; cursor: pointer;
+/* Results List */
+#results-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.row {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
 }
-.mob-tab-btn.active { color: var(--accent); }
-.mob-tab-icon { font-size: 16px; }
+.row:hover { background: rgba(255, 255, 255, 0.05); }
+.row.active { background: rgba(255, 176, 0, 0.08); border-left: 3px solid var(--accent); }
+
+.row-top { display: flex; align-items: center; gap: 12px; }
+.row-th {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.row-th img { width: 100%; height: 100%; object-fit: cover; }
+.row-tx { flex: 1; min-width: 0; }
+.row-nm {
+  font-family: var(--f-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.4px;
+}
+.row-mt {
+  font-size: 12px;
+  color: var(--mute);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+.row-al {
+  font-family: var(--f-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.row-details {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: none;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+.row.active .row-details { display: block; }
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.action-btn {
+  font-family: var(--f-sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 9px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.action-btn:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.25); color: #fff; }
+.action-btn.ai { background: rgba(255, 176, 0, 0.15); border-color: var(--accent); color: var(--accent); }
+.action-btn.ai:hover { background: var(--accent); color: #000; }
+
+/* Custom Marker Styling */
+.marker-pin {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+  background: #141922;
+  border: 2px solid var(--accent);
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s, background 0.2s;
+}
+.marker-pin:hover, .marker-pin.active {
+  background: var(--accent);
+  transform: rotate(-45deg) scale(1.2);
+}
+.marker-pin span {
+  transform: rotate(45deg);
+  font-size: 14px;
+}
+
+/* Modal for AI Itinerary */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.hide { display: none; }
+.modal-box {
+  background: #10151f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+}
+.modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-head h2 { font-family: var(--f-display); font-size: 22px; color: #fff; text-transform: uppercase; }
+.modal-close { background: none; border: none; color: var(--mute); font-size: 24px; cursor: pointer; }
+.modal-close:hover { color: #fff; }
+.modal-body { padding: 20px; overflow-y: auto; font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+.modal-body h3 { font-family: var(--f-display); font-size: 18px; color: var(--accent); margin: 16px 0 8px; text-transform: uppercase; }
+.modal-body ul { margin-left: 20px; margin-bottom: 12px; }
+.modal-body p { margin-bottom: 10px; }
+.key-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.key-row { display: flex; gap: 8px; margin-top: 8px; }
+.key-input {
+  flex: 1;
+  background: #0a0d14;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+.key-input:focus { border-color: var(--accent); }
 
 @media (max-width: 768px) {
-  #sidebar { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; transform: translateX(0); }
-  #sidebar.view-map { transform: translateX(-100%); }
-  #mobile-tabs { display: flex; }
+  :root { --rail: 100vw; }
+  .rail-toggle { display: none; }
 }
 </style>
 </head>
 <body>
 
-<header id="header">
+<header id="bar">
   <div class="brand">
-    <div class="brand-icon">🧭</div>
-    <span>Weekend & Getaway Finder</span>
-    <span class="brand-tag">Road Trip</span>
+    <div class="cap">Weekend & Day Trips · Road Trips</div>
+    <b>Explorer & Visualizer</b>
   </div>
-
-  <div class="header-actions">
-    <a href="trip_map.html" class="btn-pill" style="text-decoration:none;" title="3D Road Trip Map (Mahbubnagar → Indore)">
-      <span>🗺️</span>
-      <span class="hide-xs">3D Trip Map</span>
-    </a>
-    <button class="btn-pill" id="btn-open-settings" title="Optional AI Itinerary Settings">
-      <span>⚙️</span>
-      <span class="hide-xs">AI Itinerary (Optional)</span>
-    </button>
+  <div class="tools">
+    <a href="index.html" class="btn sm" title="Hyderabad to Indore 3D Road Trip Visualizer">🗺️ 3D Hyderabad → Indore</a>
+    <button class="btn sm" id="btn-tilt" title="Toggle 3D Pitch">📐 3D Tilt</button>
+    <button class="btn sm" id="btn-fs" title="Toggle Fullscreen">⛶</button>
   </div>
 </header>
 
-<main id="app-container">
-  
-  <aside id="sidebar">
-    <div class="sidebar-scroll">
-      
-      <!-- Starting point -->
-      <div class="search-card">
-        <div class="section-title">
-          <span>Starting Point</span>
-          <span id="loc-status" style="font-size: 10px; color: var(--accent);">Ready</span>
-        </div>
-        <div class="search-input-wrap">
-          <span class="search-icon">📍</span>
-          <input type="text" id="input-city" class="search-input" placeholder="Enter city (e.g., Hyderabad, Pune, Bengaluru)" value="Hyderabad" autocomplete="off">
-          <button class="search-clear" id="btn-clear-city">✕</button>
-          <div class="autocomplete-list" id="city-dropdown"></div>
-        </div>
+<div id="map"></div>
 
-        <button class="btn-loc" id="btn-geolocation">
-          <span>🎯</span> Use My Current Location
-        </button>
-      </div>
+<aside id="rail">
+  <div class="rail-head">
+    <div class="cap">Curated Road Trips</div>
+    <h1>Weekend Explorer</h1>
+  </div>
 
-      <!-- Distance / Drive time filter -->
-      <div class="filter-card">
-        <div class="section-title">
-          <span>Trip Radius & Range</span>
-        </div>
-
-        <div class="segmented-control">
-          <button class="seg-btn active" id="seg-hours" data-mode="hours">⏱️ By Drive Time (hrs)</button>
-          <button class="seg-btn" id="seg-km" data-mode="km">📏 By Distance (km)</button>
-        </div>
-
-        <div class="chips-row" id="chips-container"></div>
-
-        <div class="range-slider-wrap">
-          <div class="range-header">
-            <span>Maximum Range</span>
-            <span class="range-val" id="range-display">4 Hours</span>
-          </div>
-          <input type="range" id="range-slider" min="1" max="8" step="0.5" value="4">
-        </div>
-      </div>
-
-      <!-- Categories -->
-      <div class="categories-card">
-        <div class="section-title">
-          <span>Categories</span>
-          <div class="cat-actions">
-            <button class="cat-action-btn" id="cat-all">All</button>
-            <span style="color:var(--border);">|</span>
-            <button class="cat-action-btn" id="cat-none">Reset</button>
-          </div>
-        </div>
-
-        <div class="cat-grid" id="cat-grid"></div>
-      </div>
-
-      <!-- Action Button -->
-      <button class="btn-primary" id="btn-find-getaways">
-        <span>🔍</span>
-        <span id="find-btn-text">Find Road Trips & Getaways</span>
-      </button>
-
-      <!-- Results list -->
-      <div id="results-container" style="display: none;">
-        <div class="results-header">
-          <span class="results-count" id="results-count-text">Found 0 Getaways</span>
-          <select class="results-sort" id="sort-select">
-            <option value="time">Fastest Drive</option>
-            <option value="dist">Closest Distance</option>
-            <option value="wiki">Wikipedia Notable</option>
-          </select>
-        </div>
-
-        <div class="places-list" id="places-list"></div>
-      </div>
-
+  <div class="route-search">
+    <div class="sec-title">Origin City</div>
+    <div class="search-row" id="row-origin">
+      <span class="sdot"></span>
+      <input id="search-city" class="search-input" type="text" placeholder="Enter city (e.g. Hyderabad)..." value="Hyderabad" autocomplete="off" spellcheck="false">
+      <button class="icon-btn" id="btn-gps" title="Use current location">📍</button>
     </div>
-  </aside>
+    <div id="city-dropdown" class="search-dropdown hide"></div>
 
-  <!-- Interactive Map Canvas -->
-  <section id="map-container">
-    <div id="map"></div>
-  </section>
-
-</main>
-
-<nav id="mobile-tabs">
-  <button class="mob-tab-btn active" id="tab-list">
-    <span class="mob-tab-icon">📋</span>
-    <span>Places & Filter</span>
-  </button>
-  <button class="mob-tab-btn" id="tab-map">
-    <span class="mob-tab-icon">🗺️</span>
-    <span>Explore Map</span>
-  </button>
-</nav>
-
-<!-- AI Day Trip Plan Modal -->
-<div class="modal-overlay" id="modal-plan">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title">
-        <span>✨</span>
-        <span id="plan-modal-title">AI Day Trip Plan</span>
-      </div>
-      <button class="modal-close" id="plan-modal-close">✕</button>
+    <div class="sec-title">Explore Radius</div>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-hours" data-mode="hours">Drive Time (Hours)</button>
+      <button class="tab-btn" id="tab-km" data-mode="km">Distance (Km)</button>
     </div>
 
-    <div class="modal-body" id="plan-modal-body"></div>
+    <div class="chips-row" id="range-chips"></div>
 
-    <div class="modal-footer">
-      <button class="btn-pill" id="btn-copy-plan">📋 Copy Plan</button>
-      <a href="#" target="_blank" class="btn-primary" id="btn-modal-gmaps" style="width: auto; padding: 8px 16px;">🗺️ Open in Google Maps</a>
+    <div class="slider-wrap">
+      <div class="slider-info">
+        <span id="slider-label">Maximum Drive:</span>
+        <b id="slider-val">4.0 Hours</b>
+      </div>
+      <input type="range" id="range-slider" min="1" max="8" step="0.5" value="4">
+    </div>
+
+    <div class="sec-title">Categories</div>
+    <div class="cats-wrap" id="cat-chips"></div>
+
+    <button id="btn-search" class="find-btn">
+      <span>🚀</span> Discover Road Trips
+    </button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <b><span id="stat-found">0</span><small>PL</small></b>
+      <span>Getaways</span>
+    </div>
+    <div class="stat">
+      <b><span id="stat-closest">0</span><small>KM</small></b>
+      <span>Closest</span>
+    </div>
+    <div class="stat">
+      <b><span id="stat-drive">0</span><small>H</small></b>
+      <span>Avg Drive</span>
+    </div>
+    <div class="stat">
+      <b><span id="stat-radius">250</span><small>KM</small></b>
+      <span>Radius</span>
+    </div>
+  </div>
+
+  <div id="status-msg" style="display: none;">
+    <div class="spinner"></div>
+    <span id="status-text">Searching getaways...</span>
+  </div>
+
+  <div id="results-list"></div>
+</aside>
+
+<button class="rail-toggle" id="rail-toggle" title="Toggle Sidebar">◀</button>
+
+<!-- AI Itinerary Modal -->
+<div class="modal-overlay hide" id="ai-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2 id="modal-title">AI Day Trip Plan</h2>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="key-box">
+        <div class="sec-title">Claude / Gemini AI Key (Optional · Stored safely in your browser)</div>
+        <p style="font-size:12px; color:var(--mute); margin-top:4px;">
+          Leave empty to generate an instant curated day trip itinerary, or paste your API key for personalized deep AI planning.
+        </p>
+        <div class="key-row">
+          <input type="password" id="api-key-input" class="key-input" placeholder="Paste Claude (sk-ant-...) or Gemini API key...">
+          <button class="btn sm accent" id="btn-save-key">Save Key</button>
+        </div>
+      </div>
+      <div id="plan-output">
+        <p style="color:var(--mute);">Click "Generate Plan" to create an optimized day itinerary including departure timing, scenic waypoints, dining recommendations, and travel tips.</p>
+      </div>
     </div>
   </div>
 </div>
-
-<!-- Settings & API Key Modal -->
-<div class="modal-overlay" id="modal-settings">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title">
-        <span>⚙️</span>
-        <span>AI Settings & API Keys</span>
-      </div>
-      <button class="modal-close" id="settings-modal-close">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="plan-section" style="border-left: 3px solid var(--emerald); background: rgba(16, 185, 129, 0.08);">
-        <div class="plan-section-title" style="color: var(--emerald);">
-          <span>✅</span> Map & Routing are 100% Free (No API Keys Needed)
-        </div>
-        <div class="plan-section-p" style="font-size: 12px;">
-          The interactive map, place search, road driving times, elevation, and Wikipedia photos require <strong>ZERO API keys</strong>. The fields below are completely optional and only used if you wish to connect Claude 3.5 or Google Gemini for custom AI itinerary writing.
-        </div>
-      </div>
-
-      <div class="plan-section" style="border-left: 3px solid var(--accent); background: rgba(56, 189, 248, 0.08);">
-        <div class="plan-section-title" style="color: var(--accent);">
-          <span>🔒</span> Key Safety & Zero-Leak Security
-        </div>
-        <div class="plan-section-p" style="font-size: 12px;">
-          Keys you enter are stored <strong>strictly inside your own browser (localStorage)</strong> on this device. They are never uploaded to any server, database, or GitHub. Calls to Claude/Gemini are made directly from your browser via secure encrypted HTTPS. You can clear them anytime with the button below.
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Anthropic Claude API Key (Optional)</label>
-        <input type="password" id="input-claude-key" class="form-input" placeholder="sk-ant-api03-...">
-        <div class="form-hint">Enables personalized itineraries generated by Claude 3.5. Stored exclusively in your browser's local storage.</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Google Gemini API Key (Optional Free Alternative)</label>
-        <input type="password" id="input-gemini-key" class="form-input" placeholder="AIzaSy...">
-        <div class="form-hint">Free alternative if you prefer Gemini's free tier.</div>
-      </div>
-
-      <div class="plan-section">
-        <div class="plan-section-title">💡 Built-in Smart Travel Planner</div>
-        <div class="plan-section-p">If you don't enter an API key, the planner automatically uses its built-in rule-based itinerary engine. It crafts realistic departure schedules, breakfast/lunch pitstops, sightseeing routes, packing checklists, and seasonal recommendations with zero configuration!</div>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-pill" id="btn-clear-keys">Clear Stored Keys</button>
-      <button class="btn-primary" id="btn-save-settings" style="width: auto; padding: 8px 16px;">Save Settings</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast-container"></div>
 
 <script>
-// State
-const STATE = {
-  origin: { name: 'Hyderabad', lat: 17.3850, lon: 78.4867 },
-  mode: 'hours',
-  rangeVal: 4,
-  selectedCategories: new Set(['fort', 'waterfall', 'viewpoint', 'temple', 'lake', 'wildlife', 'attraction']),
-  places: [],
-  selectedPlaceId: null,
-  map: null,
-  radiusCircle: null,
-  originMarker: null,
-  placeMarkers: [],
-  claudeKey: localStorage.getItem('claude_api_key') || '',
-  geminiKey: localStorage.getItem('gemini_api_key') || '',
-  isSearching: false
+// --- State & Config ---
+const CONFIG = {
+  defaultCity: 'Hyderabad',
+  defaultCoord: [78.4867, 17.3850], // [lon, lat]
+  categories: [
+    { id: 'fort', label: 'Forts & Castles', icon: '🏰', active: true, query: ['historic=castle', 'historic=fort', 'castle_type=fortress'] },
+    { id: 'waterfall', label: 'Waterfalls & Rivers', icon: '🌊', active: true, query: ['waterway=waterfall'] },
+    { id: 'viewpoint', label: 'Viewpoints & Hills', icon: '⛰️', active: true, query: ['tourism=viewpoint', 'natural=peak', 'natural=cliff'] },
+    { id: 'temple', label: 'Temples & Heritage', icon: '🛕', active: true, query: ['amenity=place_of_worship', 'historic=monument', 'historic=archaeological_site'] },
+    { id: 'wildlife', label: 'Wildlife & Nature', icon: '🦆', active: true, query: ['boundary=national_park', 'boundary=protected_area', 'leisure=nature_reserve'] },
+    { id: 'lake', label: 'Lakes & Dams', icon: '🏞️', active: true, query: ['natural=water', 'water=reservoir', 'water=lake'] }
+  ]
 };
 
-const CATEGORIES = [
-  { id: 'fort', name: 'Forts & Castles', icon: '🏰', color: '#f59e0b' },
-  { id: 'waterfall', name: 'Waterfalls', icon: '🌊', color: '#06b6d4' },
-  { id: 'viewpoint', name: 'Viewpoints & Hills', icon: '🌄', color: '#10b981' },
-  { id: 'temple', name: 'Temples & Heritage', icon: '🛕', color: '#8b5cf6' },
-  { id: 'lake', name: 'Lakes & Nature', icon: '🏞️', color: '#38bdf8' },
-  { id: 'wildlife', name: 'Wildlife & Parks', icon: '🦁', color: '#ec4899' },
-  { id: 'attraction', name: 'Top Attractions', icon: '🌟', color: '#eab308' }
-];
+let currentOrigin = { name: CONFIG.defaultCity, coord: CONFIG.defaultCoord };
+let currentMode = 'hours'; // 'hours' or 'km'
+let currentRadiusValue = 4.0; // hours or km
+let activeCategories = new Set(CONFIG.categories.map(c => c.id));
+let loadedPlaces = [];
+let activeMarkers = [];
+let map = null;
+let currentRouteLayer = null;
+let selectedPlace = null;
+let is3DTilt = false;
 
-// Curated 70+ Destination Master Catalog covering all Indian Road Trip Hubs
-const CURATED_GETAWAYS = [
-  // Telangana & Andhra Pradesh
-  { name: 'Golconda Fort', lat: 17.3833, lon: 78.4011, cat: 'fort', wiki: 'Golconda', desc: 'Renowned 11th-century citadel and diamond-trading capital with acoustic marvels.' },
-  { name: 'Ananthagiri Hills', lat: 17.3117, lon: 77.8656, cat: 'viewpoint', wiki: 'Ananthagiri_Hills,_Vikarabad', desc: 'Scenic forested hills, Musi river origin, trekking trails, and historic temple.' },
-  { name: 'Bidar Fort', lat: 17.9250, lon: 77.5250, cat: 'fort', wiki: 'Bidar_Fort', desc: 'Magnificent 15th-century Bahmani sultanate fortress featuring 30+ bastions and triple moats.' },
-  { name: 'Pocharam Wildlife Sanctuary & Dam', lat: 18.1500, lon: 78.1667, cat: 'wildlife', wiki: 'Pocharam_Wildlife_Sanctuary', desc: 'Serene reservoir and wetland forest home to spotted deer, chinkara, and migratory birds.' },
-  { name: 'Kuntala Waterfall', lat: 19.3080, lon: 78.4830, cat: 'waterfall', wiki: 'Kuntala_Waterfall', desc: 'Highest waterfall in Telangana, cascading 147 feet amidst dense Sahyadri mountain forests.' },
-  { name: 'Pochera Falls', lat: 19.3360, lon: 78.3840, cat: 'waterfall', wiki: 'Pochera_Falls', desc: 'Mesmerizing multi-step waterfall sliding into a deep rock amphitheater.' },
-  { name: 'Warangal Fort & Thousand Pillar Temple', lat: 17.9550, lon: 79.6170, cat: 'temple', wiki: 'Warangal_Fort', desc: 'UNESCO-listed Kakatiya architectural gem with intricate star-shaped shrines.' },
-  { name: 'Ramappa Temple', lat: 18.2650, lon: 79.9400, cat: 'temple', wiki: 'Ramappa_Temple', desc: 'UNESCO World Heritage 13th-century floating brick temple celebrated for carved pillars.' },
-  { name: 'Nagarjuna Sagar Dam', lat: 16.5750, lon: 79.3130, cat: 'lake', wiki: 'Nagarjuna_Sagar_Dam', desc: 'Tallest masonry dam spanning the Krishna river with boat rides to Buddhist relics island.' },
-  { name: 'Pakhal Lake & Sanctuary', lat: 17.9620, lon: 79.9850, cat: 'lake', wiki: 'Pakhal_Lake', desc: 'Tranquil artificial lake constructed in 1213 CE surrounded by low hills and bamboo forests.' },
-  { name: 'Koilkonda Fort & Koilsagar Dam', lat: 16.8200, lon: 77.7800, cat: 'fort', wiki: 'Koilkonda_Fort', desc: 'Historic hilltop fort of the Qutb Shahi dynasty with seven majestic gateway portals.' },
-  { name: 'Singur Dam & Reservoir', lat: 17.7500, lon: 77.9300, cat: 'lake', wiki: 'Singur_Dam', desc: 'Expansive water reservoir and breeding sanctuary for deep water mugger crocodiles.' },
-  { name: 'Bhongir Fort', lat: 17.5110, lon: 78.8890, cat: 'fort', wiki: 'Bhongir_Fort', desc: 'Formidable monolithic egg-shaped rock citadel rising 500 feet built by Chalukya rulers.' },
-  { name: 'Medak Cathedral & Fort', lat: 18.0480, lon: 78.2630, cat: 'temple', wiki: 'Medak_Cathedral', desc: 'Gothic cathedral with magnificent stained-glass windows alongside an ancient hilltop fort.' },
-  { name: 'Mallela Theertham Waterfall', lat: 16.3800, lon: 78.8500, cat: 'waterfall', wiki: 'Mallela_Theertham', desc: 'Enchanting waterfall nestled in the Nallamala tiger forest falling over volcanic rocks.' },
-  { name: 'Srisailam Dam & Temple', lat: 16.0740, lon: 78.8680, cat: 'temple', wiki: 'Srisailam', desc: 'Sacred river canyon town atop Nallamala hills featuring Mallikarjuna Jyotirlinga and ropeway.' },
-  { name: 'Gandikota Grand Canyon', lat: 14.8140, lon: 78.2860, cat: 'viewpoint', wiki: 'Gandikota', desc: 'The Grand Canyon of India carved by the Penna river through red granite gorges.' },
-  { name: 'Belum Caves', lat: 15.1030, lon: 78.1120, cat: 'attraction', wiki: 'Belum_Caves', desc: 'Second largest natural cave network in India with stalactite and stalagmite formations.' },
+// --- Initialize MapLibre 3D Globe ---
+function initMap() {
+  map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      projection: { type: 'globe' },
+      glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+      sky: {
+        'sky-color': '#03050a',
+        'horizon-color': '#121a26',
+        'sky-horizon-blend': 0.7,
+        'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 0.7, 8, 0]
+      },
+      sources: {
+        osm: {
+          type: 'raster',
+          tiles: [
+            'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png'
+          ],
+          tileSize: 256,
+          attribution: '© OpenStreetMap contributors'
+        },
+        dem: {
+          type: 'raster-dem',
+          tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+          tileSize: 256,
+          encoding: 'terrarium',
+          maxzoom: 12
+        }
+      },
+      layers: [
+        {
+          id: 'osm-tiles',
+          type: 'raster',
+          source: 'osm',
+          minzoom: 0,
+          maxzoom: 19,
+          paint: { 'raster-opacity': 0.85, 'raster-saturation': -0.2 }
+        }
+      ],
+      terrain: { source: 'dem', exaggeration: 1.5 }
+    },
+    center: currentOrigin.coord,
+    zoom: 8.5,
+    pitch: 45,
+    bearing: 0,
+    maxPitch: 80
+  });
 
-  // Maharashtra & Western India
-  { name: 'Lonavala & Tiger Point', lat: 18.7540, lon: 73.4060, cat: 'viewpoint', wiki: 'Lonavala', desc: 'Beloved misty hill town with deep cliff drops, Karla caves, and Bhushi dam.' },
-  { name: 'Sinhagad Fort', lat: 18.3660, lon: 73.7550, cat: 'fort', wiki: 'Sinhagad', desc: 'Legendary mountain fortress conquered by Tanaji Malusare with breathtaking Sahyadri views.' },
-  { name: 'Rajmachi Fort & Trek', lat: 18.8250, lon: 73.3980, cat: 'fort', wiki: 'Rajmachi', desc: 'Twin historic citadels Shrivardhan and Manaranjan overlooking the Konkan plains.' },
-  { name: 'Lohagad Fort', lat: 18.7080, lon: 73.4780, cat: 'fort', wiki: 'Lohagad', desc: 'Formidable iron fort of Chhatrapati Shivaji Maharaj with Vinchukata scorpions-tail ridge.' },
-  { name: 'Mahabaleshwar & Arthur Seat', lat: 17.9237, lon: 73.6586, cat: 'viewpoint', wiki: 'Mahabaleshwar', desc: 'Queen of Maharashtra hill stations renowned for strawberry orchards and cliff lookouts.' },
-  { name: 'Kaas Plateau Flower Valley', lat: 17.7200, lon: 73.8200, cat: 'viewpoint', wiki: 'Kaas_Plateau', desc: 'UNESCO World Natural Heritage volcanic plateau turning into a vibrant carpet of wildflowers.' },
-  { name: 'Matheran Echo Point', lat: 18.9860, lon: 73.2680, cat: 'viewpoint', wiki: 'Matheran', desc: 'Asia’s only automobile-free hill station famous for red mud trails and cliff panoramic points.' },
-  { name: 'Alibaug & Kolaba Fort', lat: 18.6410, lon: 72.8720, cat: 'fort', wiki: 'Kolaba_Fort', desc: 'Sea fortress standing in the Arabian Sea accessible by walking during low tide.' },
-  { name: 'Murud-Janjira Sea Fort', lat: 18.3000, lon: 72.9640, cat: 'fort', wiki: 'Murud-Janjira', desc: 'Impregnable island fortress surrounded on all sides by Arabian sea waves.' },
-  { name: 'Bhandardara & Arthur Lake', lat: 19.5370, lon: 73.7570, cat: 'lake', wiki: 'Bhandardara', desc: 'Serene holiday village nestled beneath Mount Kalsubai featuring umbrella falls.' },
-  { name: 'Ajanta Caves', lat: 20.5519, lon: 75.7033, cat: 'attraction', wiki: 'Ajanta_Caves', desc: 'Masterpiece 2nd-century BCE rock-cut Buddhist cave monuments and frescoes.' },
-  { name: 'Ellora Caves & Daulatabad', lat: 20.0268, lon: 75.1772, cat: 'temple', wiki: 'Ellora_Caves', desc: 'Monumental monolithic rock-cut Kailash temple carved from a single basalt cliff.' },
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
 
-  // Karnataka & South
-  { name: 'Nandi Hills', lat: 13.3702, lon: 77.6835, cat: 'viewpoint', wiki: 'Nandi_Hills,_India', desc: 'Historic fortress hill celebrated for sunrise cloud beds and Tipu Sultans summer lodge.' },
-  { name: 'Shivanasamudra Falls', lat: 12.2960, lon: 77.1680, cat: 'waterfall', wiki: 'Shivanasamudra_Falls', desc: 'Twin thundering waterfalls Gaganachukki and Bharachukki on the Kaveri river.' },
-  { name: 'Hogenakkal Falls', lat: 12.1180, lon: 77.7760, cat: 'waterfall', wiki: 'Hogenakkal_Falls', desc: 'The Niagara of India renowned for coracle boat rides and medicinal river mist.' },
-  { name: 'Ranganathittu Bird Sanctuary', lat: 12.4240, lon: 76.6850, cat: 'wildlife', wiki: 'Ranganathittu_Bird_Sanctuary', desc: 'Kaveri river islets harboring painted storks, spoonbills, and mugger crocodiles.' },
-  { name: 'Savandurga Monolith', lat: 12.9190, lon: 77.2930, cat: 'viewpoint', wiki: 'Savandurga', desc: 'One of the largest monolithic granite hills in Asia rising 1226 meters.' },
-  { name: 'Mysore Palace & Chamundi Hill', lat: 12.3050, lon: 76.6550, cat: 'fort', wiki: 'Mysore_Palace', desc: 'Opulent Indo-Saracenic royal residence illuminated with 100,000 golden bulbs.' },
-  { name: 'Kabini Wildlife Sanctuary', lat: 11.9200, lon: 76.2700, cat: 'wildlife', wiki: 'Kabini_River', desc: 'Premier jungle safari destination famous for black panthers and Asian elephants.' },
-  { name: 'Coorg Madikeri Fort & Abbey Falls', lat: 12.4244, lon: 75.7382, cat: 'viewpoint', wiki: 'Madikeri', desc: 'Scotland of India draped in lush coffee plantations, spice gardens, and cascading waterfalls.' },
-
-  // Central India (Indore / MP)
-  { name: 'Rajwada Palace, Indore', lat: 22.7176, lon: 75.8546, cat: 'fort', wiki: 'Rajwada', desc: 'Seven-story historic Maratha palace blending Mughal and Maratha architecture.' },
-  { name: 'Mandu (Jahaz Mahal)', lat: 22.3660, lon: 75.4050, cat: 'fort', wiki: 'Mandu,_Madhya_Pradesh', desc: 'The City of Joy featuring ship palace, Afghan architecture, and Baobab trees.' },
-  { name: 'Maheshwar Ahilya Fort & Ghats', lat: 22.1760, lon: 75.5830, cat: 'fort', wiki: 'Maheshwar', desc: 'Timeless Narmada river fortress and sacred ghats built by Maharani Ahilyabai Holkar.' },
-  { name: 'Patalpani Waterfall', lat: 22.5020, lon: 75.8420, cat: 'waterfall', wiki: 'Patalpani_waterfall', desc: 'Popular 300-foot monsoon cascade dropping into a mystical bottomless gorge.' },
-  { name: 'Tincha Falls & Valley', lat: 22.6100, lon: 75.9800, cat: 'waterfall', wiki: 'Indore', desc: 'Spectacular multi-stream waterfall surrounded by lush green Malwa plateau canyons.' },
-  { name: 'Omkareshwar Jyotirlinga & Island', lat: 22.2450, lon: 76.1500, cat: 'temple', wiki: 'Omkareshwar', desc: 'Sacred island in the shape of the Om symbol nestled on the holy Narmada river.' },
-  { name: 'Ujjain Mahakaleshwar & Ghats', lat: 23.1820, lon: 75.7680, cat: 'temple', wiki: 'Ujjain', desc: 'Ancient prime meridian spiritual city home to Mahakaleshwar and Ram Ghat.' },
-
-  // North India (Delhi / NCR / Rajasthan)
-  { name: 'Neemrana Fort Palace', lat: 27.9940, lon: 76.3860, cat: 'fort', wiki: 'Neemrana', desc: '15th-century heritage palace stepped into the Aravali hills featuring ziplining.' },
-  { name: 'Sultanpur Bird Sanctuary', lat: 28.4620, lon: 76.8920, cat: 'wildlife', wiki: 'Sultanpur_National_Park', desc: 'Winter haven for over 250 species of resident and migratory Asian birds.' },
-  { name: 'Bharatpur Keoladeo National Park', lat: 27.1600, lon: 77.5200, cat: 'wildlife', wiki: 'Keoladeo_National_Park', desc: 'UNESCO World Heritage wetland sanctuary teeming with rare waterfowl.' },
-  { name: 'Amer Fort & Nahargarh', lat: 26.9855, lon: 75.8513, cat: 'fort', wiki: 'Amer_Fort', desc: 'Majestic Rajput hilltop citadel overlooking Maota Lake with Sheesh Mahal mirrors.' },
-  { name: 'Sariska Tiger Reserve', lat: 27.3200, lon: 76.4300, cat: 'wildlife', wiki: 'Sariska_Tiger_Reserve', desc: 'Dry deciduous forest sanctuary populated by Bengal tigers, leopards, and nilgai.' },
-  { name: 'Rishikesh Ganga Ghats & Rafting', lat: 30.0869, lon: 78.2676, cat: 'viewpoint', wiki: 'Rishikesh', desc: 'Yoga capital of the world on the emerald Himalayan foothills of the holy Ganges.' }
-];
-
-function showToast(msg, type = 'info') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
-  toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+  map.on('load', () => {
+    updateRadiusCircle();
+    performSearch();
+  });
 }
 
-// 1. Geocoding & Autocomplete
-let debounceTimer = null;
-const inputCity = document.getElementById('input-city');
-const cityDropdown = document.getElementById('city-dropdown');
-const btnClearCity = document.getElementById('btn-clear-city');
+// --- Radius Visual Circle ---
+function updateRadiusCircle() {
+  if (!map) return;
+  const radiusKm = currentMode === 'hours' ? currentRadiusValue * 60 : currentRadiusValue;
+  const points = 64;
+  const coords = [];
+  const distanceX = radiusKm / (111.32 * Math.cos(currentOrigin.coord[1] * Math.PI / 180));
+  const distanceY = radiusKm / 110.574;
 
-inputCity.addEventListener('input', (e) => {
-  const val = e.target.value.trim();
-  btnClearCity.style.display = val ? 'block' : 'none';
-  clearTimeout(debounceTimer);
-  if (val.length < 2) {
-    cityDropdown.style.display = 'none';
+  for (let i = 0; i <= points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = distanceX * Math.cos(theta);
+    const y = distanceY * Math.sin(theta);
+    coords.push([currentOrigin.coord[0] + x, currentOrigin.coord[1] + y]);
+  }
+
+  const geojson = {
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [coords] }
+    }]
+  };
+
+  if (map.getSource('radius-circle')) {
+    map.getSource('radius-circle').setData(geojson);
+  } else {
+    map.addSource('radius-circle', { type: 'geojson', data: geojson });
+    map.addLayer({
+      id: 'radius-circle-fill',
+      type: 'fill',
+      source: 'radius-circle',
+      paint: {
+        'fill-color': '#ffb000',
+        'fill-opacity': 0.06
+      }
+    });
+    map.addLayer({
+      id: 'radius-circle-line',
+      type: 'line',
+      source: 'radius-circle',
+      paint: {
+        'line-color': '#ffb000',
+        'line-width': 1.8,
+        'line-dasharray': [3, 2],
+        'line-opacity': 0.7
+      }
+    });
+  }
+}
+
+// --- Origin Autocomplete (Photon) ---
+let photonDebounce = null;
+const searchCityInput = document.getElementById('search-city');
+const cityDropdown = document.getElementById('city-dropdown');
+
+searchCityInput.addEventListener('input', e => {
+  clearTimeout(photonDebounce);
+  const q = e.target.value.trim();
+  if (q.length < 2) {
+    cityDropdown.classList.add('hide');
     return;
   }
-  debounceTimer = setTimeout(() => searchCityPhoton(val), 250);
-});
-
-btnClearCity.addEventListener('click', () => {
-  inputCity.value = '';
-  btnClearCity.style.display = 'none';
-  cityDropdown.style.display = 'none';
-  inputCity.focus();
-});
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.search-input-wrap')) {
-    cityDropdown.style.display = 'none';
-  }
-});
-
-async function searchCityPhoton(q) {
-  try {
-    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5`);
-    if (!res.ok) return;
-    const data = await res.json();
-    cityDropdown.innerHTML = '';
-    if (!data.features || data.features.length === 0) {
-      cityDropdown.style.display = 'none';
-      return;
+  photonDebounce = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5`);
+      const data = await res.json();
+      if (!data.features || !data.features.length) {
+        cityDropdown.classList.add('hide');
+        return;
+      }
+      cityDropdown.innerHTML = data.features.map(f => {
+        const p = f.properties;
+        const name = p.name || q;
+        const subtitle = [p.city, p.state, p.country].filter(Boolean).join(', ');
+        return `<div class="dropdown-item" data-lon="${f.geometry.coordinates[0]}" data-lat="${f.geometry.coordinates[1]}" data-name="${name}">
+          <b>${name}</b>
+          <small>${subtitle}</small>
+        </div>`;
+      }).join('');
+      cityDropdown.classList.remove('hide');
+    } catch (err) {
+      console.warn('Photon geocode error', err);
     }
+  }, 250);
+});
 
-    data.features.forEach(f => {
-      const props = f.properties;
-      const [lon, lat] = f.geometry.coordinates;
-      const title = props.name || props.city || q;
-      const parts = [props.state, props.country].filter(Boolean);
-      const sub = parts.join(', ');
+cityDropdown.addEventListener('click', e => {
+  const item = e.target.closest('.dropdown-item');
+  if (!item) return;
+  const lon = parseFloat(item.dataset.lon);
+  const lat = parseFloat(item.dataset.lat);
+  const name = item.dataset.name;
+  searchCityInput.value = name;
+  cityDropdown.classList.add('hide');
+  setOrigin(name, [lon, lat]);
+});
 
-      const item = document.createElement('div');
-      item.className = 'autocomplete-item';
-      item.innerHTML = `<span class="autocomplete-main">${title}</span><span class="autocomplete-sub">${sub}</span>`;
-      item.addEventListener('click', () => {
-        setOrigin(title, lat, lon);
-        cityDropdown.style.display = 'none';
-        performSearch();
-      });
-      cityDropdown.appendChild(item);
-    });
-    cityDropdown.style.display = 'block';
-  } catch (err) {
-    console.warn('Photon geocode error:', err);
+document.addEventListener('click', e => {
+  if (!e.target.closest('#row-origin') && !e.target.closest('#city-dropdown')) {
+    cityDropdown.classList.add('hide');
   }
-}
+});
 
-function setOrigin(name, lat, lon) {
-  STATE.origin = { name, lat, lon };
-  inputCity.value = name;
-  btnClearCity.style.display = 'block';
-  document.getElementById('loc-status').textContent = 'Selected';
+// GPS Button
+document.getElementById('btn-gps').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lon = pos.coords.longitude;
+    const lat = pos.coords.latitude;
+    try {
+      const res = await fetch(`https://photon.komoot.io/reverse?lon=${lon}&lat=${lat}`);
+      const data = await res.json();
+      const p = data.features?.[0]?.properties;
+      const name = p?.city || p?.name || 'My Location';
+      searchCityInput.value = name;
+      setOrigin(name, [lon, lat]);
+    } catch {
+      searchCityInput.value = 'My Location';
+      setOrigin('My Location', [lon, lat]);
+    }
+  }, err => {
+    alert('Unable to retrieve location: ' + err.message);
+  });
+});
 
-  if (STATE.map) {
-    STATE.map.setView([lat, lon], 9);
-    if (STATE.originMarker) STATE.originMarker.setLatLng([lat, lon]);
+function setOrigin(name, coord) {
+  currentOrigin = { name, coord };
+  if (map) {
+    map.flyTo({ center: coord, zoom: 8.5, pitch: 45, duration: 2000 });
     updateRadiusCircle();
   }
+  performSearch();
 }
 
-document.getElementById('btn-geolocation').addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    showToast('Geolocation is not supported by your browser.', 'error');
-    return;
-  }
-  document.getElementById('loc-status').textContent = 'Locating...';
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      const { latitude, longitude } = pos.coords;
-      try {
-        const r = await fetch(`https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}`);
-        const d = await r.json();
-        let name = 'Current Location';
-        if (d.features && d.features[0]) {
-          const p = d.features[0].properties;
-          name = p.city || p.name || p.district || 'Current Location';
-        }
-        setOrigin(name, latitude, longitude);
-        performSearch();
-      } catch (e) {
-        setOrigin('Current Location', latitude, longitude);
-        performSearch();
-      }
-    },
-    (err) => {
-      document.getElementById('loc-status').textContent = 'Denied';
-      showToast('Could not access current location.', 'error');
-    },
-    { enableHighAccuracy: true, timeout: 8000 }
-  );
-});
-
-// 2. Filter Range & Mode Controls
-const segHours = document.getElementById('seg-hours');
-const segKm = document.getElementById('seg-km');
-const chipsContainer = document.getElementById('chips-container');
+// --- Range Mode & Chips ---
+const tabHours = document.getElementById('tab-hours');
+const tabKm = document.getElementById('tab-km');
+const rangeChips = document.getElementById('range-chips');
 const rangeSlider = document.getElementById('range-slider');
-const rangeDisplay = document.getElementById('range-display');
-
-const RANGE_CONFIG = {
-  hours: { min: 1, max: 8, step: 0.5, default: 4, unit: 'Hours', chips: [2, 3, 4, 5, 6, 8] },
-  km: { min: 50, max: 500, step: 25, default: 200, unit: 'km', chips: [100, 150, 200, 300, 400, 500] }
-};
+const sliderLabel = document.getElementById('slider-label');
+const sliderVal = document.getElementById('slider-val');
 
 function renderRangeChips() {
-  const conf = RANGE_CONFIG[STATE.mode];
-  chipsContainer.innerHTML = '';
-  conf.chips.forEach(val => {
-    const chip = document.createElement('div');
-    chip.className = `chip ${STATE.rangeVal === val ? 'active' : ''}`;
-    chip.textContent = `${val} ${conf.unit}`;
-    chip.addEventListener('click', () => {
-      STATE.rangeVal = val;
-      rangeSlider.value = val;
-      updateRangeDisplay();
-      renderRangeChips();
-      updateRadiusCircle();
-    });
-    chipsContainer.appendChild(chip);
-  });
-}
-
-function updateRangeDisplay() {
-  const conf = RANGE_CONFIG[STATE.mode];
-  rangeDisplay.textContent = `${STATE.rangeVal} ${conf.unit}`;
-}
-
-segHours.addEventListener('click', () => {
-  STATE.mode = 'hours';
-  segHours.classList.add('active');
-  segKm.classList.remove('active');
-  const conf = RANGE_CONFIG.hours;
-  rangeSlider.min = conf.min;
-  rangeSlider.max = conf.max;
-  rangeSlider.step = conf.step;
-  STATE.rangeVal = conf.default;
-  rangeSlider.value = conf.default;
-  updateRangeDisplay();
-  renderRangeChips();
-  updateRadiusCircle();
-});
-
-segKm.addEventListener('click', () => {
-  STATE.mode = 'km';
-  segKm.classList.add('active');
-  segHours.classList.remove('active');
-  const conf = RANGE_CONFIG.km;
-  rangeSlider.min = conf.min;
-  rangeSlider.max = conf.max;
-  rangeSlider.step = conf.step;
-  STATE.rangeVal = conf.default;
-  rangeSlider.value = conf.default;
-  updateRangeDisplay();
-  renderRangeChips();
-  updateRadiusCircle();
-});
-
-rangeSlider.addEventListener('input', (e) => {
-  STATE.rangeVal = parseFloat(e.target.value);
-  updateRangeDisplay();
-  renderRangeChips();
-  updateRadiusCircle();
-});
-
-// 3. Category Grid
-const catGrid = document.getElementById('cat-grid');
-function renderCategories() {
-  catGrid.innerHTML = '';
-  CATEGORIES.forEach(cat => {
-    const pill = document.createElement('div');
-    const isActive = STATE.selectedCategories.has(cat.id);
-    pill.className = `cat-pill ${isActive ? 'active' : ''}`;
-    pill.innerHTML = `<span class="cat-icon">${cat.icon}</span><span class="cat-name">${cat.name}</span>`;
-    pill.addEventListener('click', () => {
-      if (STATE.selectedCategories.has(cat.id)) {
-        if (STATE.selectedCategories.size > 1) {
-          STATE.selectedCategories.delete(cat.id);
-        } else {
-          showToast('Keep at least one category selected', 'info');
-        }
-      } else {
-        STATE.selectedCategories.add(cat.id);
-      }
-      renderCategories();
-    });
-    catGrid.appendChild(pill);
-  });
-}
-
-document.getElementById('cat-all').addEventListener('click', () => {
-  CATEGORIES.forEach(c => STATE.selectedCategories.add(c.id));
-  renderCategories();
-});
-document.getElementById('cat-none').addEventListener('click', () => {
-  STATE.selectedCategories.clear();
-  STATE.selectedCategories.add('fort');
-  STATE.selectedCategories.add('waterfall');
-  renderCategories();
-});
-
-// 4. Leaflet Map
-function initMap() {
-  STATE.map = L.map('map', {
-    zoomControl: false,
-    attributionControl: false
-  }).setView([STATE.origin.lat, STATE.origin.lon], 9);
-
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    subdomains: 'abcd'
-  }).addTo(STATE.map);
-
-  L.control.zoom({ position: 'topright' }).addTo(STATE.map);
-
-  const originIcon = L.divIcon({
-    className: 'origin-pin-wrap',
-    html: `<div class="origin-pin">📍</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
-  STATE.originMarker = L.marker([STATE.origin.lat, STATE.origin.lon], { icon: originIcon }).addTo(STATE.map);
-  STATE.originMarker.bindTooltip("Starting Location", { permanent: false, direction: 'top' });
-
-  updateRadiusCircle();
-}
-
-function updateRadiusCircle() {
-  if (!STATE.map) return;
-  const km = STATE.mode === 'hours' ? STATE.rangeVal * 65 : STATE.rangeVal;
-  const radiusMeters = km * 1000;
-
-  if (STATE.radiusCircle) {
-    STATE.radiusCircle.setLatLng([STATE.origin.lat, STATE.origin.lon]);
-    STATE.radiusCircle.setRadius(radiusMeters);
+  if (currentMode === 'hours') {
+    const chips = [2, 3, 4, 6, 8];
+    rangeChips.innerHTML = chips.map(h => `
+      <button class="chip ${currentRadiusValue === h ? 'active' : ''}" data-val="${h}">${h} Hours</button>
+    `).join('');
+    rangeSlider.min = 1;
+    rangeSlider.max = 8;
+    rangeSlider.step = 0.5;
+    rangeSlider.value = currentRadiusValue;
+    sliderLabel.textContent = 'Maximum Drive:';
+    sliderVal.textContent = `${currentRadiusValue} Hours`;
   } else {
-    STATE.radiusCircle = L.circle([STATE.origin.lat, STATE.origin.lon], {
-      radius: radiusMeters,
-      color: '#38bdf8',
-      weight: 1.5,
-      opacity: 0.6,
-      fillColor: '#38bdf8',
-      fillOpacity: 0.05,
-      dashArray: '6, 6'
-    }).addTo(STATE.map);
+    const chips = [100, 200, 300, 400, 500];
+    rangeChips.innerHTML = chips.map(km => `
+      <button class="chip ${currentRadiusValue === km ? 'active' : ''}" data-val="${km}">${km} Km</button>
+    `).join('');
+    rangeSlider.min = 50;
+    rangeSlider.max = 500;
+    rangeSlider.step = 25;
+    rangeSlider.value = currentRadiusValue;
+    sliderLabel.textContent = 'Maximum Distance:';
+    sliderVal.textContent = `${currentRadiusValue} Km`;
   }
 }
 
-// 5. Discovery Engine: Curated + Wikipedia GeoSearch
-async function discoverCandidates(lat, lon, radiusKm) {
-  const candidates = [];
-  const seen = new Set();
+tabHours.addEventListener('click', () => {
+  currentMode = 'hours';
+  tabHours.classList.add('active');
+  tabKm.classList.remove('active');
+  currentRadiusValue = 4.0;
+  renderRangeChips();
+  updateRadiusCircle();
+});
 
-  function addPlace(p) {
-    const k = p.name.toLowerCase().trim();
-    if (seen.has(k)) return;
-    seen.add(k);
-    candidates.push(p);
-  }
+tabKm.addEventListener('click', () => {
+  currentMode = 'km';
+  tabKm.classList.add('active');
+  tabHours.classList.remove('active');
+  currentRadiusValue = 250;
+  renderRangeChips();
+  updateRadiusCircle();
+});
 
-  // 1. Curated master catalog (instant & authoritative)
-  CURATED_GETAWAYS.forEach(cg => {
-    const dist = haversineKm(lat, lon, cg.lat, cg.lon);
-    if (dist <= radiusKm * 1.3 && STATE.selectedCategories.has(cg.cat)) {
-      addPlace({ ...cg });
-    }
+rangeChips.addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  currentRadiusValue = parseFloat(chip.dataset.val);
+  renderRangeChips();
+  updateRadiusCircle();
+});
+
+rangeSlider.addEventListener('input', e => {
+  currentRadiusValue = parseFloat(e.target.value);
+  sliderVal.textContent = currentMode === 'hours' ? `${currentRadiusValue} Hours` : `${currentRadiusValue} Km`;
+  document.querySelectorAll('#range-chips .chip').forEach(c => {
+    c.classList.toggle('active', parseFloat(c.dataset.val) === currentRadiusValue);
   });
+  updateRadiusCircle();
+});
 
-  // 2. Wikipedia GeoSearch (with CORS origin=*, 100% free)
+// --- Categories ---
+const catChips = document.getElementById('cat-chips');
+function renderCategories() {
+  catChips.innerHTML = CONFIG.categories.map(c => `
+    <button class="cat-pill ${activeCategories.has(c.id) ? 'active' : ''}" data-cat="${c.id}">
+      <span>${c.icon}</span> ${c.label}
+    </button>
+  `).join('');
+}
+catChips.addEventListener('click', e => {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+  const cid = pill.dataset.cat;
+  if (activeCategories.has(cid)) {
+    if (activeCategories.size > 1) activeCategories.delete(cid);
+  } else {
+    activeCategories.add(cid);
+  }
+  renderCategories();
+});
+
+// --- Search Overpass API & OSRM Routing ---
+const btnSearch = document.getElementById('btn-search');
+const statusMsg = document.getElementById('status-msg');
+const statusText = document.getElementById('status-text');
+const resultsList = document.getElementById('results-list');
+
+btnSearch.addEventListener('click', performSearch);
+
+async function performSearch() {
+  statusMsg.style.display = 'flex';
+  statusText.textContent = 'Querying OpenStreetMap attractions...';
+  resultsList.innerHTML = '';
+  clearMarkers();
+
+  const radiusKm = currentMode === 'hours' ? currentRadiusValue * 60 : currentRadiusValue;
+  document.getElementById('stat-radius').textContent = Math.round(radiusKm);
+
   try {
-    const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=50&format=json&origin=*`;
-    const r = await fetch(wikiUrl);
-    if (r.ok) {
-      const d = await r.json();
-      const items = d.query?.geosearch || [];
-      items.forEach(it => {
-        const cat = detectCategory(it.title);
-        if (cat && STATE.selectedCategories.has(cat)) {
-          addPlace({
-            name: it.title,
-            lat: it.lat,
-            lon: it.lon,
-            cat: cat,
-            wiki: it.title.replace(/ /g, '_'),
-            desc: `Notable ${cat} destination documented on Wikipedia.`
-          });
-        }
+    const rawPlaces = await fetchOverpassAttractions(currentOrigin.coord, radiusKm);
+    statusText.textContent = `Analyzing ${rawPlaces.length} destinations with OSRM...`;
+
+    // Process with OSRM
+    const enriched = await enrichPlaces(rawPlaces, currentOrigin.coord);
+    loadedPlaces = enriched;
+    
+    // Sort by duration or distance
+    loadedPlaces.sort((a, b) => a.durationSec - b.durationSec);
+
+    renderResults(loadedPlaces);
+    renderMarkers(loadedPlaces);
+    updateStats(loadedPlaces);
+
+    statusMsg.style.display = 'none';
+  } catch (err) {
+    console.error('Search error', err);
+    statusText.textContent = 'Error fetching data. Showing curated suggestions.';
+    setTimeout(() => { statusMsg.style.display = 'none'; }, 2000);
+    renderFallbackCurated(currentOrigin);
+  }
+}
+
+// Overpass API Query
+async function fetchOverpassAttractions(coord, radiusKm) {
+  const [lon, lat] = coord;
+  const radiusMeters = Math.min(radiusKm * 1000, 300000);
+
+  // Build Overpass QL tags for active categories
+  const tagQueries = [];
+  CONFIG.categories.forEach(cat => {
+    if (activeCategories.has(cat.id)) {
+      cat.query.forEach(q => {
+        const [k, v] = q.split('=');
+        tagQueries.push(`node["${k}"="${v}"](around:${radiusMeters},${lat},${lon});`);
+        tagQueries.push(`way["${k}"="${v}"](around:${radiusMeters},${lat},${lon});`);
       });
     }
-  } catch (e) {
-    console.warn('Wikipedia geosearch notice:', e);
-  }
+  });
 
-  return candidates;
-}
+  const query = `
+    [out:json][timeout:15];
+    (
+      ${tagQueries.slice(0, 18).join('\n')}
+    );
+    out center 35;
+  `;
 
-function detectCategory(title) {
-  const t = title.toLowerCase();
-  // Filter out political/administrative/civic noise
-  if (/\b(constituency|assembly|election|district court|police|hospital|college|school|university|metro|railway|station|bus stand|bus station|insurance|bank|authority|corporation|ministry|department|contamination|riot|fire|crash|incident|murder|case)\b/.test(t)) {
-    return null;
-  }
+  const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Overpass status ' + res.status);
+  const data = await res.json();
 
-  if (/\b(fort|palace|castle|citadel|garh|kot)\b/.test(t)) return 'fort';
-  if (/\b(falls|waterfall|cascade|theertham)\b/.test(t)) return 'waterfall';
-  if (/\b(hill|hills|peak|ghat|viewpoint|valley|plateau|cliff)\b/.test(t)) return 'viewpoint';
-  if (/\b(temple|mandir|church|cathedral|mosque|masjid|dargah|tomb|monument|stupa|basadi)\b/.test(t)) return 'temple';
-  if (/\b(lake|dam|reservoir|sagar|river|talab|talao|kund|backwater)\b/.test(t)) return 'lake';
-  if (/\b(wildlife|sanctuary|park|zoo|safari|forest|reserve|national park)\b/.test(t)) return 'wildlife';
-  if (/\b(museum|garden|caves|heritage|observatory|memorial|attraction)\b/.test(t)) return 'attraction';
+  const seen = new Set();
+  const places = [];
 
-  return null;
-}
+  (data.elements || []).forEach(el => {
+    const tags = el.tags || {};
+    const name = tags.name || tags['name:en'];
+    if (!name || seen.has(name.toLowerCase())) return;
+    seen.add(name.toLowerCase());
 
-// 6. Batch Travel Time & Distance (OSRM Table API)
-async function calculateBatchTravelTimes(origin, places) {
-  if (places.length === 0) return [];
-  const sliced = places.slice(0, 45);
-  const coordsStr = `${origin.lon},${origin.lat};` + sliced.map(p => `${p.lon},${p.lat}`).join(';');
-  const url = `https://router.project-osrm.org/table/v1/driving/${coordsStr}?sources=0&annotations=duration,distance`;
+    const lat = el.lat || el.center?.lat;
+    const lon = el.lon || el.center?.lon;
+    if (!lat || !lon) return;
 
-  try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(tid);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.code === 'Ok') {
-        const durations = data.durations[0];
-        const distances = data.distances[0];
-
-        sliced.forEach((p, idx) => {
-          const dSec = durations[idx + 1];
-          const dMtr = distances[idx + 1];
-          if (dSec !== null && dSec !== undefined) {
-            p.durationSec = dSec;
-            p.distanceKm = Math.round((dMtr / 1000) * 10) / 10;
-            p.durationHours = dSec / 3600;
-            p.timeText = formatDuration(dSec);
-          } else {
-            p.distanceKm = Math.round(haversineKm(origin.lat, origin.lon, p.lat, p.lon) * 1.3);
-            p.durationHours = p.distanceKm / 55;
-            p.durationSec = p.durationHours * 3600;
-            p.timeText = formatDuration(p.durationSec);
-          }
+    // Detect category
+    let matchedCat = CONFIG.categories[0];
+    for (const c of CONFIG.categories) {
+      if (activeCategories.has(c.id)) {
+        const matches = c.query.some(q => {
+          const [k, v] = q.split('=');
+          return tags[k] === v;
         });
-        return sliced;
+        if (matches) { matchedCat = c; break; }
       }
     }
-  } catch (err) {
-    console.warn('OSRM Table API notice:', err);
+
+    places.push({
+      id: el.id,
+      name,
+      coord: [lon, lat],
+      category: matchedCat,
+      tags,
+      wiki: tags.wikipedia || tags.wikidata
+    });
+  });
+
+  return places;
+}
+
+// Calculate driving distance & duration with OSRM
+async function enrichPlaces(places, originCoord) {
+  if (!places.length) return [];
+  const selected = places.slice(0, 16);
+
+  // Haversine fallback helper
+  const haversine = (c1, c2) => {
+    const R = 6371;
+    const dLat = (c2[1] - c1[1]) * Math.PI / 180;
+    const dLon = (c2[0] - c1[0]) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(c1[1]*Math.PI/180) * Math.cos(c2[1]*Math.PI/180) * Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  };
+
+  const results = [];
+  for (const p of selected) {
+    const straightKm = haversine(originCoord, p.coord);
+    let driveKm = Math.round(straightKm * 1.3);
+    let driveSec = Math.round((driveKm / 65) * 3600);
+
+    // Try OSRM route for real road data
+    try {
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoord[0]},${originCoord[1]};${p.coord[0]},${p.coord[1]}?overview=false`;
+      const r = await fetch(osrmUrl);
+      if (r.ok) {
+        const d = await r.json();
+        if (d.routes && d.routes[0]) {
+          driveKm = Math.round(d.routes[0].distance / 1000);
+          driveSec = Math.round(d.routes[0].duration);
+        }
+      }
+    } catch (e) {
+      // fallback to estimation
+    }
+
+    // Filter by max range
+    const driveHours = driveSec / 3600;
+    if (currentMode === 'hours' && driveHours > currentRadiusValue * 1.15) continue;
+    if (currentMode === 'km' && driveKm > currentRadiusValue * 1.15) continue;
+
+    results.push({
+      ...p,
+      distanceKm: driveKm,
+      durationSec: driveSec,
+      durationHours: driveHours,
+      desc: p.tags.description || `${p.category.label} nestled in the scenic landscapes outside ${currentOrigin.name}.`
+    });
   }
 
-  sliced.forEach(p => {
-    p.distanceKm = Math.round(haversineKm(origin.lat, origin.lon, p.lat, p.lon) * 1.3);
-    p.durationHours = p.distanceKm / 55;
-    p.durationSec = p.durationHours * 3600;
-    p.timeText = formatDuration(p.durationSec);
-  });
-  return sliced;
+  // Fetch Wikipedia blurbs in background for notable places
+  fetchWikipediaDetails(results);
+
+  return results;
 }
 
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+// Fetch Wikipedia extracts & images
+async function fetchWikipediaDetails(places) {
+  for (const p of places) {
+    try {
+      let title = p.name;
+      if (p.wiki && p.wiki.includes(':')) title = p.wiki.split(':')[1];
+      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.extract) p.desc = data.extract;
+        if (data.thumbnail && data.thumbnail.source) p.img = data.thumbnail.source;
+        updateCardDOM(p);
+      }
+    } catch {
+      // ignore
+    }
+  }
 }
 
-function formatDuration(sec) {
+function updateCardDOM(p) {
+  const row = document.querySelector(`.row[data-id="${p.id}"]`);
+  if (!row) return;
+  if (p.img) {
+    const th = row.querySelector('.row-th');
+    if (th) th.innerHTML = `<img src="${p.img}" alt="" loading="lazy">`;
+  }
+  const descEl = row.querySelector('.row-desc');
+  if (descEl) descEl.textContent = p.desc;
+}
+
+// Render Results Cards
+function renderResults(places) {
+  if (!places.length) {
+    resultsList.innerHTML = `
+      <div style="padding: 28px 18px; text-align: center; color: var(--mute);">
+        <div style="font-size: 32px; margin-bottom: 8px;">🧭</div>
+        <b>No getaways found in this radius</b>
+        <p style="font-size: 12px; margin-top: 6px;">Try increasing the drive time or ticking more categories above.</p>
+      </div>`;
+    return;
+  }
+
+  resultsList.innerHTML = places.map((p, idx) => `
+    <div class="row" data-id="${p.id}" onclick="selectPlace(${idx})">
+      <div class="row-top">
+        <div class="row-th">
+          ${p.img ? `<img src="${p.img}" alt="" loading="lazy">` : p.category.icon}
+        </div>
+        <div class="row-tx">
+          <div class="row-nm">${p.name}</div>
+          <div class="row-mt">
+            <span>${p.category.icon} ${p.category.label}</span>
+            <span>·</span>
+            <span>⏱️ ${fmtDuration(p.durationSec)}</span>
+          </div>
+        </div>
+        <div class="row-al">${p.distanceKm} km</div>
+      </div>
+      <div class="row-details">
+        <p class="row-desc">${p.desc}</p>
+        <div class="row-actions">
+          <button class="action-btn" onclick="event.stopPropagation(); flyTo3D(${idx})">👁️ 3D Fly-To</button>
+          <button class="action-btn" onclick="event.stopPropagation(); drawRoute(${idx})">🚗 3D Route</button>
+          <button class="action-btn ai" onclick="event.stopPropagation(); openPlanModal(${idx})">✨ Plan Trip (AI)</button>
+          <a class="action-btn" href="https://www.google.com/maps/dir/?api=1&origin=${currentOrigin.coord[1]},${currentOrigin.coord[0]}&destination=${p.coord[1]},${p.coord[0]}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ Maps</a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStats(places) {
+  document.getElementById('stat-found').textContent = places.length;
+  if (!places.length) {
+    document.getElementById('stat-closest').textContent = '0';
+    document.getElementById('stat-drive').textContent = '0';
+    return;
+  }
+  const closest = Math.min(...places.map(p => p.distanceKm));
+  const avgHours = (places.reduce((acc, p) => acc + p.durationHours, 0) / places.length).toFixed(1);
+  document.getElementById('stat-closest').textContent = closest;
+  document.getElementById('stat-drive').textContent = avgHours;
+}
+
+function fmtDuration(sec) {
   const h = Math.floor(sec / 3600);
   const m = Math.round((sec % 3600) / 60);
   if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} hr`;
   return `${h}h ${m}m`;
 }
 
-// 7. Wikipedia Thumbnails & Summaries
-async function enrichWithWikipedia(places) {
-  const top = places.slice(0, 16);
-  await Promise.all(top.map(async p => {
-    try {
-      const q = encodeURIComponent(p.wiki || p.name);
-      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${q}`;
-      const r = await fetch(url);
-      if (r.ok) {
-        const d = await r.json();
-        if (d.extract) p.desc = d.extract;
-        if (d.thumbnail && d.thumbnail.source) p.img = d.thumbnail.source;
-        p.hasWiki = true;
-      }
-    } catch (e) {}
-  }));
+// --- Map Markers ---
+function clearMarkers() {
+  activeMarkers.forEach(m => m.remove());
+  activeMarkers = [];
 }
 
-// 8. Search Execution
-const btnFind = document.getElementById('btn-find-getaways');
-const findBtnText = document.getElementById('find-btn-text');
+function renderMarkers(places) {
+  clearMarkers();
+  places.forEach((p, idx) => {
+    const el = document.createElement('div');
+    el.className = 'marker-pin';
+    el.innerHTML = `<span>${p.category.icon}</span>`;
+    el.title = `${p.name} (${p.distanceKm} km)`;
 
-btnFind.addEventListener('click', performSearch);
-
-async function performSearch() {
-  if (STATE.isSearching) return;
-  STATE.isSearching = true;
-  btnFind.disabled = true;
-  findBtnText.innerHTML = `<span class="spinner"></span> Scouting destinations...`;
-
-  try {
-    const radiusKm = STATE.mode === 'hours' ? STATE.rangeVal * 65 : STATE.rangeVal;
-
-    // 1. Gather candidates
-    const candidates = await discoverCandidates(STATE.origin.lat, STATE.origin.lon, radiusKm);
-
-    if (candidates.length === 0) {
-      showToast('No destinations found for these filters. Try increasing range or selecting more categories.', 'info');
-      findBtnText.textContent = 'Find Road Trips & Getaways';
-      btnFind.disabled = false;
-      STATE.isSearching = false;
-      return;
-    }
-
-    // 2. Batch calculate driving times
-    findBtnText.innerHTML = `<span class="spinner"></span> Calculating road travel times...`;
-    const routed = await calculateBatchTravelTimes(STATE.origin, candidates);
-
-    // 3. Filter by range
-    let filtered = routed.filter(p => {
-      if (!STATE.selectedCategories.has(p.cat)) return false;
-      if (STATE.mode === 'hours') {
-        return p.durationHours <= STATE.rangeVal * 1.15;
-      } else {
-        return p.distanceKm <= STATE.rangeVal * 1.1;
-      }
+    el.addEventListener('click', () => {
+      selectPlace(idx);
     });
 
-    if (filtered.length === 0) filtered = routed.slice(0, 8);
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat(p.coord)
+      .addTo(map);
 
-    // 4. Enrich Wikipedia thumbnails
-    findBtnText.innerHTML = `<span class="spinner"></span> Gathering photos & stories...`;
-    await enrichWithWikipedia(filtered);
-
-    // Sort fastest first
-    filtered.sort((a, b) => (a.durationSec || 0) - (b.durationSec || 0));
-    STATE.places = filtered;
-
-    renderResults(filtered);
-    renderMapMarkers(filtered);
-    showToast(`Found ${filtered.length} scenic getaways!`, 'success');
-
-  } catch (err) {
-    console.error('Search error:', err);
-    showToast('Search error. Please try again.', 'error');
-  } finally {
-    btnFind.disabled = false;
-    findBtnText.textContent = 'Find Road Trips & Getaways';
-    STATE.isSearching = false;
-  }
-}
-
-// 9. Results Rendering
-const resultsContainer = document.getElementById('results-container');
-const resultsCountText = document.getElementById('results-count-text');
-const placesList = document.getElementById('places-list');
-const sortSelect = document.getElementById('sort-select');
-
-sortSelect.addEventListener('change', () => {
-  const val = sortSelect.value;
-  if (val === 'time') STATE.places.sort((a, b) => a.durationSec - b.durationSec);
-  else if (val === 'dist') STATE.places.sort((a, b) => a.distanceKm - b.distanceKm);
-  else if (val === 'wiki') STATE.places.sort((a, b) => (b.hasWiki ? 1 : 0) - (a.hasWiki ? 1 : 0));
-  renderResults(STATE.places);
-});
-
-function renderResults(places) {
-  resultsContainer.style.display = 'block';
-  resultsCountText.textContent = `Found ${places.length} Getaways · Sorted`;
-  placesList.innerHTML = '';
-
-  places.forEach((p, idx) => {
-    const card = document.createElement('div');
-    card.className = `place-card ${STATE.selectedPlaceId === idx ? 'selected' : ''}`;
-    card.id = `card-place-${idx}`;
-
-    const catObj = CATEGORIES.find(c => c.id === p.cat) || CATEGORIES[0];
-    const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${STATE.origin.lat},${STATE.origin.lon}&destination=${p.lat},${p.lon}`;
-
-    const imgHtml = p.img 
-      ? `<img src="${p.img}" class="place-img" alt="${p.name}" loading="lazy">`
-      : `<div class="place-img-fallback"><span>${catObj.icon}</span><small>${catObj.name}</small></div>`;
-
-    card.innerHTML = `
-      <div class="place-img-wrap">
-        ${imgHtml}
-        <div class="badge-cat" style="border-left: 3px solid ${catObj.color};">
-          <span>${catObj.icon}</span> ${catObj.name}
-        </div>
-        <div class="badge-time">
-          <span>🚗</span> ${p.timeText} · ${p.distanceKm} km
-        </div>
-      </div>
-      <div class="place-body">
-        <div class="place-title">${p.name}</div>
-        <div class="place-desc">${p.desc || 'Scenic destination perfect for weekend exploration.'}</div>
-        <div class="place-actions">
-          <a href="${gmapsUrl}" target="_blank" class="btn-card-action" title="Navigate with Google Maps">
-            <span>🗺️</span> Route
-          </a>
-          <button class="btn-card-action btn-card-ai" onclick="openPlanModal(${idx}); event.stopPropagation();">
-            <span>✨</span> Plan Trip
-          </button>
-        </div>
-      </div>
-    `;
-
-    card.addEventListener('click', () => selectPlace(idx));
-    placesList.appendChild(card);
+    activeMarkers.push(marker);
   });
 }
 
 function selectPlace(idx) {
-  STATE.selectedPlaceId = idx;
-  const p = STATE.places[idx];
+  const p = loadedPlaces[idx];
   if (!p) return;
+  selectedPlace = p;
 
-  document.querySelectorAll('.place-card').forEach(c => c.classList.remove('selected'));
-  const card = document.getElementById(`card-place-${idx}`);
-  if (card) {
-    card.classList.add('selected');
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  if (STATE.map && STATE.placeMarkers[idx]) {
-    const m = STATE.placeMarkers[idx];
-    STATE.map.flyTo([p.lat, p.lon], 12, { duration: 1.2 });
-    m.openPopup();
-  }
-}
-
-// 10. Markers
-function renderMapMarkers(places) {
-  STATE.placeMarkers.forEach(m => STATE.map.removeLayer(m));
-  STATE.placeMarkers = [];
-
-  const bounds = L.latLngBounds([[STATE.origin.lat, STATE.origin.lon]]);
-
-  places.forEach((p, idx) => {
-    const catObj = CATEGORIES.find(c => c.id === p.cat) || CATEGORIES[0];
-    const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${STATE.origin.lat},${STATE.origin.lon}&destination=${p.lat},${p.lon}`;
-
-    const icon = L.divIcon({
-      className: 'place-pin-wrap',
-      html: `<div class="place-pin" style="border-color:${catObj.color};">${catObj.icon}</div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
-
-    const marker = L.marker([p.lat, p.lon], { icon }).addTo(STATE.map);
-
-    const popupContent = `
-      <div class="popup-card">
-        ${p.img ? `<img src="${p.img}" class="popup-img" alt="${p.name}">` : ''}
-        <div class="popup-title">${p.name}</div>
-        <div class="popup-meta">🚗 ${p.timeText} · ${p.distanceKm} km</div>
-        <div style="font-size:11px; color:#94a3b8; line-height:1.3;">${(p.desc || '').slice(0, 95)}...</div>
-        <a href="${gmapsUrl}" target="_blank" class="popup-btn">🗺️ Start Driving</a>
-      </div>
-    `;
-
-    marker.bindPopup(popupContent);
-    marker.on('click', () => selectPlace(idx));
-
-    bounds.extend([p.lat, p.lon]);
-    STATE.placeMarkers.push(marker);
+  document.querySelectorAll('.row').forEach((r, i) => {
+    r.classList.toggle('active', i === idx);
+  });
+  activeMarkers.forEach((m, i) => {
+    m.getElement().classList.toggle('active', i === idx);
   });
 
-  if (places.length > 0) {
-    STATE.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+  flyTo3D(idx);
+}
+
+function flyTo3D(idx) {
+  const p = loadedPlaces[idx];
+  if (!p || !map) return;
+  map.flyTo({
+    center: p.coord,
+    zoom: 13.5,
+    pitch: 60,
+    bearing: 35,
+    duration: 2500,
+    essential: true
+  });
+}
+
+// Draw 3D Route
+async function drawRoute(idx) {
+  const p = loadedPlaces[idx];
+  if (!p || !map) return;
+
+  statusMsg.style.display = 'flex';
+  statusText.textContent = `Fetching route to ${p.name}...`;
+
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${currentOrigin.coord[0]},${currentOrigin.coord[1]};${p.coord[0]},${p.coord[1]}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.routes || !data.routes[0]) return;
+
+    const geojson = {
+      type: 'Feature',
+      geometry: data.routes[0].geometry
+    };
+
+    if (map.getSource('active-route')) {
+      map.getSource('active-route').setData(geojson);
+    } else {
+      map.addSource('active-route', { type: 'geojson', data: geojson });
+      map.addLayer({
+        id: 'active-route-line',
+        type: 'line',
+        source: 'active-route',
+        paint: {
+          'line-color': '#ffb000',
+          'line-width': 4.5,
+          'line-opacity': 0.9
+        }
+      });
+      map.addLayer({
+        id: 'active-route-glow',
+        type: 'line',
+        source: 'active-route',
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 1.5,
+          'line-opacity': 0.8
+        }
+      });
+    }
+
+    // Fit route in view
+    const coords = data.routes[0].geometry.coordinates;
+    const bounds = coords.reduce((b, coord) => b.extend(coord), new maplibregl.LngLatBounds(coords[0], coords[0]));
+    map.fitBounds(bounds, { padding: 80, pitch: 50, duration: 2000 });
+  } catch (err) {
+    console.error('Route error', err);
+  } finally {
+    statusMsg.style.display = 'none';
   }
 }
 
-// 11. AI Day Trip Plan Modal
-const modalPlan = document.getElementById('modal-plan');
-const planModalClose = document.getElementById('plan-modal-close');
-const planModalTitle = document.getElementById('plan-modal-title');
-const planModalBody = document.getElementById('plan-modal-body');
-const btnModalGmaps = document.getElementById('btn-modal-gmaps');
-const btnCopyPlan = document.getElementById('btn-copy-plan');
+// --- Top Bar Controls ---
+document.getElementById('btn-tilt').addEventListener('click', () => {
+  if (!map) return;
+  is3DTilt = !is3DTilt;
+  map.easeTo({
+    pitch: is3DTilt ? 65 : 0,
+    bearing: is3DTilt ? 40 : 0,
+    duration: 1200
+  });
+});
 
-let currentPlanText = '';
+document.getElementById('btn-fs').addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
 
-planModalClose.addEventListener('click', () => modalPlan.classList.remove('open'));
-modalPlan.addEventListener('click', (e) => {
-  if (e.target === modalPlan) modalPlan.classList.remove('open');
+// Sidebar Toggle
+const rail = document.getElementById('rail');
+const railToggle = document.getElementById('rail-toggle');
+railToggle.addEventListener('click', () => {
+  rail.classList.toggle('collapsed');
+  railToggle.textContent = rail.classList.contains('collapsed') ? '▶' : '◀';
+});
+
+// --- AI Day Trip Plan Modal ---
+const aiModal = document.getElementById('ai-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+const planOutput = document.getElementById('plan-output');
+const apiKeyInput = document.getElementById('api-key-input');
+const btnSaveKey = document.getElementById('btn-save-key');
+const modalClose = document.getElementById('modal-close');
+
+// Load stored API key safely from localStorage
+const storedKey = localStorage.getItem('travel_ai_key') || '';
+if (storedKey) apiKeyInput.value = storedKey;
+
+btnSaveKey.addEventListener('click', () => {
+  const k = apiKeyInput.value.trim();
+  if (k) {
+    localStorage.setItem('travel_ai_key', k);
+    alert('API Key safely saved in your browser storage!');
+  } else {
+    localStorage.removeItem('travel_ai_key');
+    alert('API Key cleared.');
+  }
+});
+
+modalClose.addEventListener('click', () => {
+  aiModal.classList.add('hide');
+});
+
+aiModal.addEventListener('click', e => {
+  if (e.target === aiModal) aiModal.classList.add('hide');
 });
 
 async function openPlanModal(idx) {
-  const p = STATE.places[idx];
+  const p = loadedPlaces[idx];
   if (!p) return;
+  modalTitle.textContent = `AI Day Plan: ${p.name}`;
+  aiModal.classList.remove('hide');
 
-  modalPlan.classList.add('open');
-  planModalTitle.textContent = `Day Trip Plan: ${p.name}`;
-  btnModalGmaps.href = `https://www.google.com/maps/dir/?api=1&origin=${STATE.origin.lat},${STATE.origin.lon}&destination=${p.lat},${p.lon}`;
+  const apiKey = localStorage.getItem('travel_ai_key') || apiKeyInput.value.trim();
 
-  planModalBody.innerHTML = `
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 40px; gap:12px;">
-      <div class="spinner" style="width:28px; height:28px; border-width:3px;"></div>
-      <div style="font-size:14px; color:var(--text-muted);">Crafting your customized day trip plan...</div>
-    </div>
-  `;
+  planOutput.innerHTML = `
+    <div style="display:flex; align-items:center; gap:10px; padding:20px 0; color:var(--accent);">
+      <div class="spinner"></div>
+      <b>Synthesizing optimized day trip plan for ${p.name}...</b>
+    </div>`;
 
-  if (STATE.claudeKey) {
-    await generateClaudePlan(p);
-  } else if (STATE.geminiKey) {
-    await generateGeminiPlan(p);
+  if (apiKey && apiKey.startsWith('sk-ant-')) {
+    await generateClaudePlan(p, apiKey);
+  } else if (apiKey && apiKey.length > 25) {
+    await generateGeminiPlan(p, apiKey);
   } else {
-    setTimeout(() => generateBuiltinPlan(p), 350);
+    generateBuiltinPlan(p);
   }
 }
 
+// Built-in intelligent day planner
 function generateBuiltinPlan(p) {
-  const driveHours = Math.max(1, Math.round(p.durationHours || 2));
-  const leaveTime = driveHours >= 4 ? '5:30 AM' : '6:30 AM';
-  const breakfastTime = driveHours >= 4 ? '8:00 AM' : '8:30 AM';
-  const reachTime = `${6 + driveHours}:00 AM`;
-  const catObj = CATEGORIES.find(c => c.id === p.cat) || CATEGORIES[0];
+  const departHour = 6;
+  const arriveHour = departHour + Math.ceil(p.durationHours);
+  const lunchHour = 13;
+  const returnHour = 17;
+  const homeHour = returnHour + Math.ceil(p.durationHours);
 
-  const html = `
-    <div class="plan-banner" style="background-image: url('${p.img || ''}');">
-      <div class="plan-banner-text">
-        <div class="plan-banner-title">${p.name}</div>
-        <div class="plan-banner-sub">🚗 ${p.timeText} drive · ${p.distanceKm} km from ${STATE.origin.name}</div>
-      </div>
-    </div>
+  const markdown = `
+### 🌅 Curated Day Plan: ${p.name} (${p.distanceKm} km from ${currentOrigin.name})
 
-    <div class="plan-section">
-      <div class="plan-section-title">🌟 Why Go</div>
-      <div class="plan-section-p">${p.desc || `An extraordinary ${catObj.name.toLowerCase()} getaway offering fresh air, panoramic landscapes, and a rejuvenating break from city noise.`}</div>
-    </div>
+* **Category:** ${p.category.icon} ${p.category.label}
+* **One-way Drive Time:** ~${fmtDuration(p.durationSec)} (${p.distanceKm} km via highway)
+* **Ideal Trip Duration:** Full Day (12 to 14 hours)
 
-    <div class="plan-section">
-      <div class="plan-section-title">⏰ Suggested Schedule</div>
-      <div class="plan-section-p">
-        <strong>${leaveTime} — Early Start:</strong> Start early to skip highway toll bottlenecks and catch cool morning breezes.<br>
-        <strong>${breakfastTime} — Scenic Highway Pitstop:</strong> Stop for fresh South-Indian tiffins, masala tea, and tender coconut water along the bypass.<br>
-        <strong>${reachTime} — Arrival & Exploration:</strong> Spend 3–4 hours exploring the main viewpoints, photography trails, and historic viewpoints.<br>
-        <strong>1:30 PM — Local Lunch:</strong> Savor authentic regional country meals and traditional thali at nearby dhabas.<br>
-        <strong>4:30 PM — Sunset Panorama:</strong> Capture golden hour light before heading onto the return road.<br>
-        <strong>${5 + driveHours}:30 PM — Return Home:</strong> Reach back comfortably before late-night city congestion.
-      </div>
-    </div>
+---
 
-    <div class="plan-section">
-      <div class="plan-section-title">🍲 Where to Eat & Specialties</div>
-      <div class="plan-section-p">Look for bustling highway food courts with active outdoor seating. Try local specialty biryani, hot mirchi bajjis, country chicken curries, and freshly brewed filter coffee.</div>
-    </div>
+### ⏱️ Suggested Schedule & Timeline
+* **06:00 AM — Departure:** Leave ${currentOrigin.name} early to breeze through morning city traffic.
+* **07:30 AM — Breakfast Stop:** Enjoy piping hot idli/dosa, poha, and filter coffee at a highway food court.
+* **0${arriveHour}:30 AM — Arrival at ${p.name}:** Explore the historical grounds, viewpoint vistas, and scenic pathways while the weather is pleasant.
+* **0${lunchHour}:00 PM — Lunch & Local Cuisine:** Head to nearby traditional dhabas for authentic regional delicacies and fresh beverages.
+* **03:00 PM — Relaxed Photography & Walk:** Walk around the natural surroundings, soak in panoramic views, and capture golden-hour photos.
+* **0${returnHour}:00 PM — Return Drive:** Begin the smooth drive back towards ${currentOrigin.name}.
+* **${homeHour >= 12 ? homeHour - 12 : homeHour}:30 PM — Arrival Home:** Arrive back in ${currentOrigin.name} refreshed after a memorable road trip.
 
-    <div class="plan-section">
-      <div class="plan-section-title">☀️ Best Season & Weather Tips</div>
-      <div class="plan-section-p">${p.cat === 'waterfall' ? 'Monsoon to early winter (July – November) when water flow is roaring and valleys turn emerald.' : 'October to March for crisp mornings and pleasant daytime temperatures.'}</div>
-    </div>
+---
 
-    <div class="plan-section">
-      <div class="plan-section-title">🎒 What to Carry</div>
-      <div class="checklist-item">Comfortable walking shoes with sturdy rubber grips</div>
-      <div class="checklist-item">2+ liters of drinking water per person & light dry snacks</div>
-      <div class="checklist-item">Polarized sunglasses, sun hat, and sunscreen</div>
-      <div class="checklist-item">Cash (₹500 - ₹1000) for local parking, entry permits & rural vendors</div>
-      <div class="checklist-item">Camera or charged power bank for photography</div>
-    </div>
+### 🎒 What to Carry
+* Reusable water bottles and hydration packs
+* Comfortable walking shoes or trekking footwear
+* Sun protection (sunglasses, hat, sunscreen SPF 50+)
+* Fastag recharged and vehicle tire pressures verified
+* Camera or powerbank for capturing stunning landscapes
+
+---
+
+> 💡 **Tip:** Add a Claude or Gemini API key in the box above to get custom AI recommendations tailored to live weather and hidden gems!
   `;
 
-  planModalBody.innerHTML = html;
-  currentPlanText = extractPlainText(html);
+  planOutput.innerHTML = marked.parse(markdown);
 }
 
-async function generateClaudePlan(p) {
-  const prompt = `Write a comprehensive, fun day-trip itinerary for visiting "${p.name}" from "${STATE.origin.name}" (${p.distanceKm} km, ${p.timeText} drive).
-Provide: 1) Why Go, 2) Exact Schedule (early departure time, breakfast stop, arrival, lunch, sunset return), 3) Where to eat & specialties, 4) Best season, 5) 5 items to pack.
-Format in clean HTML div blocks with class="plan-section" and class="plan-section-title".`;
+// Live Claude API Call
+async function generateClaudePlan(p, apiKey) {
+  const prompt = `Write a vivid, practical, and highly engaging one-day road trip itinerary from ${currentOrigin.name} to ${p.name} (${p.category.label}, ${p.distanceKm} km, driving duration ~${fmtDuration(p.durationSec)}).
+Include:
+1. Exact departure recommendation and highway route notes.
+2. What to explore at ${p.name} (historical/natural significance).
+3. Recommended breakfast and lunch stops (local regional foods).
+4. Best season/month to visit.
+5. Essential packing checklist.
+Format cleanly with Markdown headers and bullet points.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': STATE.claudeKey,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'content-type': 'application/json',
+        'dangerously-allow-browser': 'true'
       },
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20241022',
@@ -1649,112 +1428,38 @@ Format in clean HTML div blocks with class="plan-section" and class="plan-sectio
         messages: [{ role: 'user', content: prompt }]
       })
     });
-    if (!res.ok) throw new Error('Claude API error');
-    const data = await res.json();
-    planModalBody.innerHTML = data.content[0].text;
-    currentPlanText = extractPlainText(planModalBody.innerHTML);
-  } catch (err) {
-    showToast('Claude API error. Showing built-in travel plan.', 'info');
-    generateBuiltinPlan(p);
-  }
-}
 
-async function generateGeminiPlan(p) {
-  const prompt = `Write a day-trip itinerary for "${p.name}" starting from "${STATE.origin.name}" (${p.distanceKm} km, ${p.timeText} drive).
-Provide: 1) Why Go, 2) Exact Schedule, 3) Food specialties, 4) Best season, 5) 5 packing items.`;
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${STATE.geminiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    if (!res.ok) throw new Error('Gemini API error');
+    if (!res.ok) throw new Error('Claude API error ' + res.status);
     const data = await res.json();
-    planModalBody.innerHTML = data.candidates[0].content.parts[0].text;
-    currentPlanText = extractPlainText(planModalBody.innerHTML);
+    const text = data.content[0].text;
+    planOutput.innerHTML = marked.parse(text);
   } catch (e) {
+    console.warn('Claude API failed, falling back to built-in planner', e);
     generateBuiltinPlan(p);
   }
 }
 
-function extractPlainText(html) {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.innerText || tmp.textContent || '';
+// Fallback Curated Getaways if Overpass is down
+function renderFallbackCurated(origin) {
+  const hydGetaways = [
+    { id: 101, name: 'Ananthagiri Hills & Forests', distanceKm: 82, durationSec: 5400, durationHours: 1.5, category: CONFIG.categories[2], coord: [77.985, 17.310], desc: 'Lush green dense deciduous hills, source of the Musi river, offering scenic forest viewpoints and misty mornings.', img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300' },
+    { id: 102, name: 'Bhongir Fort', distanceKm: 48, durationSec: 3600, durationHours: 1.0, category: CONFIG.categories[0], coord: [78.889, 17.512], desc: 'Massive monolithic egg-shaped granite fortress built in the 10th century by Chalukya king Tribhuvanamalla Vikramaditya VI.', img: 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?w=300' },
+    { id: 103, name: 'Bidar Fort & Madrasa', distanceKm: 142, durationSec: 9600, durationHours: 2.7, category: CONFIG.categories[0], coord: [77.525, 17.925], desc: 'Spectacular 15th-century Bahmani sultanate capital fortress with triple moats, Persian architecture, and Solah Khamba Mosque.' },
+    { id: 104, name: 'Pocharam Wildlife Sanctuary & Dam', distanceKm: 115, durationSec: 8400, durationHours: 2.3, category: CONFIG.categories[4], coord: [78.183, 18.150], desc: 'Serene reservoir lake created by the Nizams, teeming with migratory flamingos, painted storks, and spotted deers.' },
+    { id: 105, name: 'Nagarjuna Sagar & Ethipothala Falls', distanceKm: 165, durationSec: 12000, durationHours: 3.3, category: CONFIG.categories[1], coord: [79.312, 16.578], desc: 'Colossal masonry dam on the Krishna river alongside a 70-foot cascading multi-tiered waterfall in scenic gorges.' },
+    { id: 106, name: 'Medak Fort & Cathedral', distanceKm: 96, durationSec: 7200, durationHours: 2.0, category: CONFIG.categories[0], coord: [78.261, 18.046], desc: 'Hilltop Kakatiya citadel offering panoramic views over surrounding lakes, paired with one of the largest Gothic cathedrals in Asia.' }
+  ];
+
+  loadedPlaces = hydGetaways;
+  renderResults(loadedPlaces);
+  renderMarkers(loadedPlaces);
+  updateStats(loadedPlaces);
 }
 
-btnCopyPlan.addEventListener('click', () => {
-  if (currentPlanText) {
-    navigator.clipboard.writeText(currentPlanText);
-    showToast('Plan copied to clipboard!', 'success');
-  }
-});
-
-// 12. Settings Modal
-const modalSettings = document.getElementById('modal-settings');
-const btnOpenSettings = document.getElementById('btn-open-settings');
-const settingsModalClose = document.getElementById('settings-modal-close');
-const inputClaudeKey = document.getElementById('input-claude-key');
-const inputGeminiKey = document.getElementById('input-gemini-key');
-const btnSaveSettings = document.getElementById('btn-save-settings');
-const btnClearKeys = document.getElementById('btn-clear-keys');
-
-btnOpenSettings.addEventListener('click', () => {
-  inputClaudeKey.value = STATE.claudeKey;
-  inputGeminiKey.value = STATE.geminiKey;
-  modalSettings.classList.add('open');
-});
-
-settingsModalClose.addEventListener('click', () => modalSettings.classList.remove('open'));
-modalSettings.addEventListener('click', (e) => {
-  if (e.target === modalSettings) modalSettings.classList.remove('open');
-});
-
-btnSaveSettings.addEventListener('click', () => {
-  STATE.claudeKey = inputClaudeKey.value.trim();
-  STATE.geminiKey = inputGeminiKey.value.trim();
-  localStorage.setItem('claude_api_key', STATE.claudeKey);
-  localStorage.setItem('gemini_api_key', STATE.geminiKey);
-  modalSettings.classList.remove('open');
-  showToast('Settings saved successfully', 'success');
-});
-
-btnClearKeys.addEventListener('click', () => {
-  STATE.claudeKey = '';
-  STATE.geminiKey = '';
-  inputClaudeKey.value = '';
-  inputGeminiKey.value = '';
-  localStorage.removeItem('claude_api_key');
-  localStorage.removeItem('gemini_api_key');
-  showToast('Stored API keys cleared', 'info');
-});
-
-// 13. Mobile View Switcher
-const tabList = document.getElementById('tab-list');
-const tabMap = document.getElementById('tab-map');
-const sidebar = document.getElementById('sidebar');
-
-tabList.addEventListener('click', () => {
-  tabList.classList.add('active');
-  tabMap.classList.remove('active');
-  sidebar.classList.remove('view-map');
-});
-
-tabMap.addEventListener('click', () => {
-  tabMap.classList.add('active');
-  tabList.classList.remove('active');
-  sidebar.classList.add('view-map');
-  if (STATE.map) STATE.map.invalidateSize();
-});
-
-// Startup
-window.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  renderRangeChips();
-  renderCategories();
-  updateRangeDisplay();
-  performSearch();
-});
+// Start app
+renderRangeChips();
+renderCategories();
+initMap();
 </script>
 </body>
 </html>
